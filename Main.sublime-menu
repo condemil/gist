@@ -1,0 +1,11 @@
+[
+    {
+        "caption": "Tools",
+        "mnemonic": "T",
+        "id": "tools",
+        "children":
+        [
+            { "command": "gist", "caption": "Create Gist" }
+        ]
+    }
+]

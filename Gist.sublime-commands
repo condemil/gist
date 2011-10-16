@@ -1,0 +1,6 @@
+[
+    {
+        "caption": "Create Gist from Selected Text",
+        "command": "gist"
+    }
+]

@@ -1,0 +1,11 @@
+# Ignore compiled Python files
+*.pyc
+
+# Ignore cache files
+*.cache
+
+# Ignore Sublime Text 2 project files
+*.sublime-project
+
+# Ignore Mac Desktop Services files
+.DS_Store
