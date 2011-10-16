@@ -45,6 +45,7 @@ From menu items:
 By command called "Create Gist from Selected Text".
 
 There is a key bindings:
+
 * Windows and Linux: "ctrl+k", "ctrl+i"
 * OS X: "super+k", "super+i"
 
