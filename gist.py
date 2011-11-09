@@ -26,10 +26,10 @@ def create_gist(description):
 				'Content-Length': len(data)}
 
 	request = urllib2.Request(url, data, headers)
-	result = urllib2.urlopen(request)
+	response = urllib2.urlopen(request)
 
-	res = json.loads(result.read())
-	sublime.set_clipboard(res['html_url'])
+	result = json.loads(response.read())
+	sublime.set_clipboard(result['html_url'])
 
 class PromptGistCommand(sublime_plugin.WindowCommand):
 	def run(self):

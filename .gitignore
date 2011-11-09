@@ -6,6 +6,7 @@
 
 # Ignore Sublime Text 2 project files
 *.sublime-project
+*.sublime-workspace
 
 # Ignore Mac Desktop Services files
 .DS_Store
