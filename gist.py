@@ -28,6 +28,9 @@ def create_gist(description):
 	request = urllib2.Request(url, data, headers)
 	result = urllib2.urlopen(request)
 
+	res = json.loads(result.read())
+	sublime.set_clipboard(res['html_url'])
+
 class PromptGistCommand(sublime_plugin.WindowCommand):
 	def run(self):
 		fileName = os.path.basename(self.window.active_view().file_name())
