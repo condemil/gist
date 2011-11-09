@@ -33,8 +33,8 @@ def create_gist(description):
 
 class PromptGistCommand(sublime_plugin.WindowCommand):
 	def run(self):
-		fileName = os.path.basename(self.window.active_view().file_name())
-		self.window.show_input_panel('File name:', fileName, self.on_done_input_file_name, None, None)
+		fileName = os.path.basename(self.window.active_view().file_name()) if self.window.active_view().file_name() else ''
+		self.window.show_input_panel('File name: (optional):', fileName, self.on_done_input_file_name, None, None)
 
 	def on_done_input_file_name(self, fileName):
 		global _fileName
@@ -51,4 +51,6 @@ class GistCommand(sublime_plugin.TextCommand):
 				global _selectedText
 				_selectedText = self.view.substr(selectedRegion)
 				self.view.window().run_command('prompt_gist')
-
+			else:
+				_selectedText = self.view.substr(sublime.Region(0, self.view.size()))
+				self.view.window().run_command('prompt_gist')
