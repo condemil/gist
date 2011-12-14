@@ -26,6 +26,15 @@ def create_gist(description):
 				'Content-Length': len(data)}
 
 	request = urllib2.Request(url, data, headers)
+
+	if settings.get('use_proxy') :
+		opener = urllib2.build_opener(
+            urllib2.HTTPHandler(),
+            urllib2.HTTPSHandler(),
+            urllib2.ProxyHandler({'https': settings.get('proxy')})
+        )
+        
+	urllib2.install_opener(opener)
 	response = urllib2.urlopen(request)
 
 	result = json.loads(response.read())
