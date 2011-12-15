@@ -2,5 +2,9 @@
     {
         "caption": "Create Gist from Selected Text",
         "command": "gist"
+    },
+    {
+        "caption": "Get Gist List",
+        "command": "gistlist"
     }
 ]
