@@ -109,7 +109,7 @@ class PromptGistCommand(sublime_plugin.WindowCommand):
 		self.window.show_input_panel('Description (optional):', '', self.on_done_input_description, None, None)
 
 	def on_done_input_description(self, description):
-		create_gist2(description)
+		create_gist(description)
 
 class GistCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
