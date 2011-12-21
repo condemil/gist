@@ -1,5 +1,7 @@
 {
 	"create_public": "false",
 	"username": "YOUR_USERNAME",
-	"password": "YOUR_PASSWORD"
+	"password": "YOUR_PASSWORD",
+	"use_proxy": "false",
+	"proxy": "http://user:pass@proxy:port"
 }
