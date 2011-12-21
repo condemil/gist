@@ -9,81 +9,28 @@ DEFAULT_CREATE_PUBLIC_VALUE = 'false'
 _selectedText = ''
 _fileName = ''
 newlist2 = []
+settings = sublime.load_settings('Gist.sublime-settings')
+url = 'https://api.github.com/gists'
 
 def create_gist(description):
-	settings = sublime.load_settings('Gist.sublime-settings')
-
-	url = 'https://api.github.com/gists'
-
 	data = json.dumps({ 'description': description,
 						'public': settings.get('create_public', DEFAULT_CREATE_PUBLIC_VALUE),
 						'files': {
 							_fileName: {'content': _selectedText}
 						}})
 
-	headers = { 'Authorization': 'Basic ' + base64.urlsafe_b64encode("%s:%s" % (settings.get('username'), settings.get('password'))),
-				'Accept': 'application/json',
-				'Content-Type': 'application/json',
-				'Content-Length': len(data)}
+	result = api_request(url, data)
 
-	request = urllib2.Request(url, data, headers)
-
-	if settings.get('use_proxy') == 'true':
-		opener = urllib2.build_opener(
-            urllib2.HTTPHandler(),
-            urllib2.HTTPSHandler(),
-            urllib2.ProxyHandler({'https': settings.get('proxy')}))        
-		urllib2.install_opener(opener)
-		
-	response = urllib2.urlopen(request)
-
-	result = json.loads(response.read())
 	sublime.set_clipboard(result['html_url'])
 
-def get_gist(id):
-	settings = sublime.load_settings('Gist.sublime-settings')
+def get_gist(url_gist):
+	result = api_request(url_gist)
 
-	url = id
-
-	request = urllib2.Request(url)
-
-	request.add_header('Authorization', 'Basic ' + base64.urlsafe_b64encode("%s:%s" % (settings.get('username'), settings.get('password'))))
-	request.add_header('Accept', 'application/json')
-	request.add_header('Content-Type', 'application/json')
-
-	if settings.get('use_proxy') == 'true':
-		opener = urllib2.build_opener(
-            urllib2.HTTPHandler(),
-            urllib2.HTTPSHandler(),
-            urllib2.ProxyHandler({'https': settings.get('proxy')}))        
-		urllib2.install_opener(opener)
-		
-	response = urllib2.urlopen(request)
-
-	result = json.loads(response.read())
 	for x in result['files']:
 		sublime.set_clipboard(result['files'][x]['content'])
 
-def get_gists():
-	settings = sublime.load_settings('Gist.sublime-settings')
-
-	url = 'https://api.github.com/gists'
-
-	request = urllib2.Request(url)
-	request.add_header('Authorization', 'Basic ' + base64.urlsafe_b64encode("%s:%s" % (settings.get('username'), settings.get('password'))))
-	request.add_header('Accept', 'application/json')
-	request.add_header('Content-Type', 'application/json')
-
-	if settings.get('use_proxy') == 'true':
-		opener = urllib2.build_opener(
-            urllib2.HTTPHandler(),
-            urllib2.HTTPSHandler(),
-            urllib2.ProxyHandler({'https': settings.get('proxy')}))        
-		urllib2.install_opener(opener)
-		
-	response = urllib2.urlopen(request)
-
-	result = json.loads(response.read())
+def get_gists():	
+	result = api_request(url)
 
 	newlist = []
 	global newlist2
@@ -96,6 +43,31 @@ def get_gists():
 		newlist2.append([x['url']])
 	
 	return newlist
+
+def api_request(url_api, data = ''):
+	request = urllib2.Request(url_api)
+	request.add_header('Authorization', 'Basic ' + base64.urlsafe_b64encode("%s:%s" % (settings.get('username'), settings.get('password'))))
+	request.add_header('Accept', 'application/json')
+	request.add_header('Content-Type', 'application/json')
+
+	if len(data)>0:
+		request.add_data(data)
+
+	if settings.get('use_proxy') == 'true':
+		use_proxy(urllib2)
+		
+	response = urllib2.urlopen(request)
+
+	return json.loads(response.read())
+
+def use_proxy(urllib2):
+    opener = urllib2.build_opener(
+            urllib2.HTTPHandler(),
+            urllib2.HTTPSHandler(),
+            urllib2.ProxyHandler({'https': settings.get('proxy')})
+            )
+                   
+    return urllib2.install_opener(opener)
 
 
 class PromptGistCommand(sublime_plugin.WindowCommand):
@@ -123,8 +95,7 @@ class GistCommand(sublime_plugin.TextCommand):
 				self.view.window().run_command('prompt_gist')
 
 class GistlistCommand(sublime_plugin.WindowCommand):
-	def run(self):	
-			
+	def run(self):			
 		self.window.show_quick_panel(get_gists(), self.on_done)
 	
 	def on_done(self, num):

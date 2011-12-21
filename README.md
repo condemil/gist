@@ -64,14 +64,14 @@ There is a key bindings:
 
 From menu items:
 
-* Main menu: Tools -> Gist -> "Create Gist"
+* Main menu: Tools -> Gist -> "Get Gist List"
 
 By command called "Gist: Get Gist List".
 
 There is a key bindings:
 
 * Windows and Linux: "ctrl+shift+g"
-* OS X: "super+super+g"
+* OS X: "super+shift+g"
 
 **The content of your selected gist will be copied into the clipboard**
 
