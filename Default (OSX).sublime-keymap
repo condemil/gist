@@ -1,3 +1,4 @@
 [
-	{ "keys": ["super+k", "super+i"], "command": "gist" }
+	{ "keys": ["super+k", "super+i"], "command": "gist" },
+	{ "keys": ["ctrl+super+g"], "command": "gistlist" }
 ]

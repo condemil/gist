@@ -5,7 +5,15 @@
         "id": "tools",
         "children":
         [
-            { "command": "gist", "caption": "Create Gist" }
+        	{
+        		"caption": "Gist",
+        		 "children":
+        		 [
+        		 	{ "command": "gist", "caption": "Create Gist" },
+            		{ "command": "gistlist", "caption": "Get Gist List" }
+        		 ]
+        	}
+            
         ]
     }
 ]

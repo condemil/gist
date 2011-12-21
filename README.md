@@ -1,7 +1,7 @@
 Gist
 ====
 
-[Sublime Text 2](http://www.sublimetext.com/) plugin for creating new Gists from selected text.
+[Sublime Text 2](http://www.sublimetext.com/) plugin for creating new Gists from selected text and get the gist list
 
 Installation
 -----------
@@ -34,20 +34,46 @@ Under the Packages/Gist sub-directory, edit the `Gist.sublime-settings` file:
 
     You need to enter your GitHub password here
 
+*   `"use_proxy": true/false`
+
+    You need to enter proxy 'true' if you use a proxy
+ 
+*   `"proxy": http://user:pass@proxy:port`
+
+    You need to enter your proxy if use_proxy is true
+
+   
+
 Usage
 -----
+Create a  gist:
 
 From menu items:
 
-* Main menu: Tools -> "Create Gist"
+* Main menu: Tools -> Gist -> "Create Gist"
 * Context menu: "Create Gist"
 
-By command called "Create Gist from Selected Text".
+By command called "Gist: Create Gist from Selected Text".
 
 There is a key bindings:
 
 * Windows and Linux: "ctrl+k", "ctrl+i"
 * OS X: "super+k", "super+i"
+
+Get gist list:
+
+From menu items:
+
+* Main menu: Tools -> Gist -> "Create Gist"
+
+By command called "Gist: Get Gist List".
+
+There is a key bindings:
+
+* Windows and Linux: "ctrl+shift+g"
+* OS X: "super+super+g"
+
+**The content of your selected gist will be copied into the clipboard**
 
 Information
 -----------
