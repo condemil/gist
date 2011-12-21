@@ -46,7 +46,7 @@ Under the Packages/Gist sub-directory, edit the `Gist.sublime-settings` file:
 
 Usage
 -----
-Create a  gist:
+**Create a  gist:**
 
 From menu items:
 
@@ -60,7 +60,7 @@ There is a key bindings:
 * Windows and Linux: "ctrl+k", "ctrl+i"
 * OS X: "super+k", "super+i"
 
-Get gist list:
+**Get gist list:**
 
 From menu items:
 
