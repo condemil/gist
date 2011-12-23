@@ -6,9 +6,10 @@ import urllib2
 import base64
 
 DEFAULT_CREATE_PUBLIC_VALUE = 'false'
+DEFAULT_USE_PROXY_VALUE = 'false'
 _selectedText = ''
 _fileName = ''
-newlist2 = []
+_gistsUrls = []
 settings = sublime.load_settings('Gist.sublime-settings')
 url = 'https://api.github.com/gists'
 
@@ -24,25 +25,25 @@ def create_gist(description):
 	sublime.set_clipboard(result['html_url'])
 
 def get_gist(url_gist):
-	result = api_request(url_gist)
+	gists = api_request(url_gist)
 
-	for x in result['files']:
-		sublime.set_clipboard(result['files'][x]['content'])
+	for gist in gists['files']:
+		sublime.set_clipboard(gists['files'][gist]['content'])
 
-def get_gists():	
-	result = api_request(url)
+def get_gists():
+	gists = api_request(url)
 
-	newlist = []
-	global newlist2
-	for x in result:
-		if(x['description'] != None):
-			newlist.append([x['description']])			
-		else: 
-			newlist.append(['No named'])
-		
-		newlist2.append([x['url']])
-	
-	return newlist
+	gistsNames = []
+
+	for gist in gists:
+		if(gist['description'] != ''):
+			gistsNames.append([gist['description']])
+		else:
+			gistsNames.append(['[No Name]'])
+
+		_gistsUrls.append([gist['url']])
+
+	return gistsNames
 
 def api_request(url_api, data = ''):
 	request = urllib2.Request(url_api)
@@ -53,9 +54,9 @@ def api_request(url_api, data = ''):
 	if len(data)>0:
 		request.add_data(data)
 
-	if settings.get('use_proxy') == 'true':
+	if settings.get('use_proxy', DEFAULT_USE_PROXY_VALUE) == 'true':
 		use_proxy(urllib2)
-		
+
 	response = urllib2.urlopen(request)
 
 	return json.loads(response.read())
@@ -66,7 +67,7 @@ def use_proxy(urllib2):
             urllib2.HTTPSHandler(),
             urllib2.ProxyHandler({'https': settings.get('proxy')})
             )
-                   
+
     return urllib2.install_opener(opener)
 
 
@@ -95,8 +96,8 @@ class GistCommand(sublime_plugin.TextCommand):
 				self.view.window().run_command('prompt_gist')
 
 class GistlistCommand(sublime_plugin.WindowCommand):
-	def run(self):			
+	def run(self):
 		self.window.show_quick_panel(get_gists(), self.on_done)
-	
+
 	def on_done(self, num):
-		get_gist(newlist2[num][0])
+		get_gist(_gistsUrls[num][0])
