@@ -1,4 +1,5 @@
 [
 	{ "keys": ["super+k", "super+i"], "command": "gist" },
-	{ "keys": ["ctrl+super+g"], "command": "gistlist" }
+	{ "keys": ["super+k", "super+l"], "command": "gist_private" },
+	{ "keys": ["ctrl+super+g"], "command": "gist_list" }
 ]

@@ -1,4 +1,5 @@
 [
 	{ "keys": ["ctrl+k", "ctrl+i"], "command": "gist" },
-	{ "keys": ["ctrl+shift+g"], "command": "gistlist" }
+	{ "keys": ["ctrl+k", "ctrl+l"], "command": "gist_private" },
+	{ "keys": ["ctrl+shift+g"], "command": "gist_list" }
 ]

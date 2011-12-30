@@ -1,10 +1,14 @@
 [
     {
-        "caption": "Gist: Create from Selected Text",
+        "caption": "Gist (public): Create from Selected Text",
         "command": "gist"
     },
     {
+        "caption": "Gist (private): Create from Selected Text",
+        "command": "gist_private"
+    },
+    {
         "caption": "Gist: Get List",
-        "command": "gistlist"
+        "command": "gist_list"
     }
 ]

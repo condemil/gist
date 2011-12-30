@@ -1,7 +1,11 @@
 {
-	"create_public": "false",
-	"username": "YOUR_USERNAME",
-	"password": "YOUR_PASSWORD",
-	"use_proxy": "false",
-	"proxy": "http://user:pass@proxy:port"
+	// Your username on GitHub
+	"username": "",
+
+	// Your password on GitHub
+	"password": "",
+
+	// Proxy server
+	// Format: "http://user:pass@proxy:port"
+	"https_proxy": ""
 }

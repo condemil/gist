@@ -5,15 +5,16 @@
         "id": "tools",
         "children":
         [
-        	{
-        		"caption": "Gist",
-        		 "children":
-        		 [
-        		 	{ "command": "gist", "caption": "Create Gist" },
-            		{ "command": "gistlist", "caption": "Get Gist List" }
-        		 ]
-        	}
-            
+            {
+                "caption": "Gist",
+                "children":
+                [
+                    { "command": "gist", "caption": "Create Public Gist" },
+                    { "command": "gist_private", "caption": "Create Private Gist" },
+                    { "command": "gist_list", "caption": "Get Gist List" }
+                ]
+            }
+
         ]
     }
 ]

@@ -20,45 +20,50 @@ Then clone this repository:
 Options
 -------
 
-Under the Packages/Gist sub-directory, edit the `Gist.sublime-settings` file:
+Copy the `Gist.sublime-settings` file from Packages/Gist to Packages/User sub-directory and edit:
 
-*   `"create_public": false`
-
-    This makes your gists be private instead of public.
-
-*   `"username": YOUR_USERNAME`
+*   `"username": ""`
 
     You need to enter your GitHub username here
 
-*   `"password": YOUR_PASSWORD`
+*   `"password": ""`
 
     You need to enter your GitHub password here
 
-*   `"use_proxy": true/false`
+*   `"https_proxy": http://user:pass@proxy:port`
 
-    You need to enter proxy 'true' if you use a proxy
- 
-*   `"proxy": http://user:pass@proxy:port`
-
-    You need to enter your proxy if use_proxy is true
-
-   
+    You can enter https proxy here
+    Format: "http://user:pass@proxy:port"
 
 Usage
 -----
-**Create a  gist:**
+**Create a public gist:**
 
 From menu items:
 
-* Main menu: Tools -> Gist -> "Create Gist"
-* Context menu: "Create Gist"
+* Main menu: Tools -> Gist -> "Create Public Gist"
+* Context menu: "Create Public Gist"
 
-By command called "Gist: Create Gist from Selected Text".
+By command called "Gist (public): Create from Selected Text"
 
 There is a key bindings:
 
 * Windows and Linux: "ctrl+k", "ctrl+i"
 * OS X: "super+k", "super+i"
+
+**Create a private gist:**
+
+From menu items:
+
+* Main menu: Tools -> Gist -> "Create Private Gist"
+* Context menu: "Create Private Gist"
+
+By command called "Gist (private): Create from Selected Text".
+
+There is a key bindings:
+
+* Windows and Linux: "ctrl+k", "ctrl+l"
+* OS X: "super+k", "super+l"
 
 **Get gist list:**
 
@@ -73,7 +78,7 @@ There is a key bindings:
 * Windows and Linux: "ctrl+shift+g"
 * OS X: "super+shift+g"
 
-**The content of your selected gist will be copied into the clipboard**
+**The content of the selected gist will be copied into the clipboard**
 
 Information
 -----------
