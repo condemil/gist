@@ -44,7 +44,7 @@ def get_gists():
         if(gist['description'] != ''):
             gistsNames.append([gist['description']])
         else:
-            gistsNames.append(['[No Name]'])
+            gistsNames.append([u'[No Name]'])
 
         _gistsUrls.append([gist['url']])
 
@@ -76,7 +76,7 @@ def api_request_wget(url_api, data = ''):
     dirs = ['/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin']
 
     for dir in dirs:
-        path = os.path.join(dir, name)
+        path = os.path.join(dir, 'wget')
 
         if os.path.exists(path):
             wget = path
@@ -85,11 +85,12 @@ def api_request_wget(url_api, data = ''):
     if (not wget):
         return False
 
-    command = [wget]
-    command.append('--user=' + settings.get('username'))
-    command.append('--password=' + settings.get('password'))
-    command.append("--header='Accept: application/json'")
-    command.append("--header='Content-Type: application/json'")
+    authorization_string = "%s:%s" % (settings.get('username'), settings.get('password'))
+
+    command = [wget, '-O', '-', '-q']
+    command.append('--header=Authorization: Basic ' + base64.urlsafe_b64encode(authorization_string))
+    command.append('--header=Accept: application/json')
+    command.append('--header=Content-Type: application/json')
 
     if len(data) > 0:
         command.append('--post-data=' + data)
@@ -99,15 +100,14 @@ def api_request_wget(url_api, data = ''):
     if settings.get('https_proxy'):
         os.putenv('https_proxy', settings.get('https_proxy'))
 
-    proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-    response = proc.stdout.read()
+    response = process.stdout.read()
 
-    returncode = proc.wait()
+    returncode = process.wait()
 
     if returncode != 0:
-        error = NonCleanExitError(returncode)
-        error.output = output
+        error = BaseException('Wget exits with code %s' % returncode)
         raise error
 
     return json.loads(response)
@@ -165,7 +165,8 @@ class GistPrivateCommand(sublime_plugin.TextCommand):
 class GistListCommand(sublime_plugin.WindowCommand):
     def run(self):
         if(check_settings()):
-            self.window.show_quick_panel(get_gists(), self.on_done)
+            gists = get_gists()
+            self.window.show_quick_panel(gists, self.on_done)
 
     def on_done(self, num):
         get_gist(_gistsUrls[num][0])
