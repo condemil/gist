@@ -1,5 +1,5 @@
 [
-    { "command": "gist", "caption": "Create Public Gist" }
-    { "command": "gist_private", "caption": "Create Private Gist" }
+    { "command": "gist", "caption": "Create Public Gist" },
+    { "command": "gist_private", "caption": "Create Private Gist" },
     { "command": "gist_list", "caption": "Get Gist List" }
 ]
