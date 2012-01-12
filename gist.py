@@ -11,11 +11,8 @@ import webbrowser
 
 DEFAULT_CREATE_PUBLIC_VALUE = 'false'
 DEFAULT_USE_PROXY_VALUE = 'false'
-_selectedText = ''
-_fileName = ''
-_gistsUrls = []
 settings = sublime.load_settings('Gist.sublime-settings')
-url = 'https://api.github.com/gists'
+GISTS_URL = 'https://api.github.com/gists'
 
 class GistMissingCredentialsException(Exception):
     pass
@@ -112,39 +109,51 @@ def catching_credential_errors(fn):
             sublime.error_message("GitHub username or password isn't provided in Gist.sublime-settings file")
     return _fn
 
-def create_gist(description, public):
-    data = json.dumps({ 'description': description, 'public': public, 'files': { _fileName: {'content': _selectedText} }})
-    result = api_request(url, data)
-    sublime.set_clipboard(result['html_url'])
-    if settings.get("open_in_browser"):
-        webbrowser.open(result['html_url'])
-    sublime.status_message("Gist: " + result['html_url'])
+@catching_credential_errors
+def create_gist(public, view, text, filename, description):
+    data = json.dumps({'description': description, 'public': public, 'files': {filename: {'content': text}}})
+    gist = api_request(GISTS_URL, data)
+    gist_html_url = gist['html_url']
+    sublime.set_clipboard(gist_html_url)
+    sublime.status_message("Gist: " + gist_html_url)
+    if view:
+        gistify_view(view, gist, filename)
 
+@catching_credential_errors
+def update_gist(gist_url, gist_filename, text):
+    data = json.dumps({'files': {gist_filename: {'content': text}}})
+    result = api_request(gist_url, data, method="PATCH")
+    sublime.status_message("Gist updated")
+
+def gistify_view(view, gist, gist_filename):
+    if not view.name():
+        view.set_name(gist_filename)
+
+    view.settings().set('gist_html_url', gist["html_url"])
+    view.settings().set('gist_url', gist["url"])
+    view.settings().set('gist_filename', gist_filename)
+    view.set_status("Gist", "Gist")
+
+@catching_credential_errors
 def get_gist(url_gist):
-    gists = api_request(url_gist)
-    for gist in gists['files']:
-        sublime.set_clipboard(gists['files'][gist]['content'])
+    gist = api_request(url_gist)
+    gist_title = gist.get('description') or u'[No name]'
+    for gist_filename, file_data in gist['files'].items():
+        view = sublime.active_window().new_file()
+
+        gistify_view(view, gist, gist_filename)
+
+        edit = view.begin_edit()
+        view.insert(edit, 0, file_data['content'])
+        view.end_edit(edit)
 
 def get_gists():
-    gists = api_request(url)
+    return api_request(GISTS_URL)
 
-    gistsNames = []
-
-    for gist in gists:
-        if gist['description']:
-            gistsNames.append(gist['description'])
-        else:
-            gistsNames.append(u'[No Name]')
-
-        _gistsUrls.append(gist['url'])
-
-    return gistsNames
-
-def api_request(url_api, data = ''):
-    if not 'ssl' in sys.modules and not os.name == 'nt':
-        return api_request_wget(url_api, data)
-
+def api_request_native(url_api, data = '', method = None):
     request = urllib2.Request(url_api)
+    if method:
+        request.get_method = lambda: method
     request.add_header('Authorization', 'Basic ' + base64.urlsafe_b64encode("%s:%s" % get_credentials()))
     request.add_header('Accept', 'application/json')
     request.add_header('Content-Type', 'application/json')
@@ -162,7 +171,7 @@ def api_request(url_api, data = ''):
 
     return json.loads(response.read())
 
-def api_request_wget(url_api, data = ''):
+def api_request_wget(url_api, data = '', method = None):
     dirs = ['/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin']
 
     for dir in dirs:
@@ -197,71 +206,93 @@ def api_request_wget(url_api, data = ''):
     returncode = process.wait()
 
     if returncode != 0:
-        error = BaseException('Wget exits with code %s' % returncode)
+        error = Exception('Wget exits with code %s' % returncode)
         raise error
 
     return json.loads(response)
 
-class PromptPublicGistCommand(sublime_plugin.WindowCommand):
-    @catching_credential_errors
-    def run(self):
-        get_credentials()
-        fileName = os.path.basename(self.window.active_view().file_name()) if self.window.active_view().file_name() else ''
-        self.window.show_input_panel('Public Gist File Name: (optional):', fileName, self.on_done_input_file_name, None, None)
-
-    def on_done_input_file_name(self, fileName):
-        global _fileName
-        _fileName = fileName
-        self.window.show_input_panel('Public Gist Description (optional):', '', self.on_done_input_description, None, None)
-
-    @catching_credential_errors
-    def on_done_input_description(self, description):
-        create_gist(description, "true")
-
-class PromptPrivateGistCommand(sublime_plugin.WindowCommand):
-    @catching_credential_errors
-    def run(self):
-        get_credentials()
-        fileName = os.path.basename(self.window.active_view().file_name()) if self.window.active_view().file_name() else ''
-        self.window.show_input_panel('Private Gist File Name: (optional):', fileName, self.on_done_input_file_name, None, None)
-
-    def on_done_input_file_name(self, fileName):
-        global _fileName
-        _fileName = fileName
-        self.window.show_input_panel('Private Gist Description (optional):', '', self.on_done_input_description, None, None)
-
-    @catching_credential_errors
-    def on_done_input_description(self, description):
-        create_gist(description, "false")
+if not 'ssl' in sys.modules and not os.name == 'nt':
+    api_request = api_request_wget
+else:
+    api_request = api_request_native
 
 class GistCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        for selectedRegion in self.view.sel():
-            if not selectedRegion.empty():
-                global _selectedText
-                _selectedText = self.view.substr(selectedRegion)
-                self.view.window().run_command('prompt_public_gist')
-            else:
-                _selectedText = self.view.substr(sublime.Region(0, self.view.size()))
-                self.view.window().run_command('prompt_public_gist')
+    public = True
 
-class GistPrivateCommand(sublime_plugin.TextCommand):
+    def mode(self):
+        return "Public" if self.public else "Private"
+
+    @catching_credential_errors
     def run(self, edit):
-        for selectedRegion in self.view.sel():
-            if not selectedRegion.empty():
-                global _selectedText
-                _selectedText = self.view.substr(selectedRegion)
-                self.view.window().run_command('prompt_private_gist')
-            else:
-                _selectedText = self.view.substr(sublime.Region(0, self.view.size()))
-                self.view.window().run_command('prompt_private_gist')
+        get_credentials()
+        selections = [region for region in self.view.sel() if not region.empty()]
+
+        if len(selections) == 0:
+            selections = [sublime.Region(0, self.view.size())]
+            gistify = True
+        else:
+            gistify = False
+
+        for region in selections:
+            self.prompt_gist_name(gistify, self.view.substr(region))
+
+    def prompt_gist_name(self, gistify, text):
+        filename = os.path.basename(self.view.file_name()) if self.view.file_name() else ''
+        self.view.window().show_input_panel(
+            '%s Gist File Name: (optional):' % self.mode(), filename,
+            lambda filename:
+                self.view.window().show_input_panel(
+                    '%s Gist Description (optional):' % self.mode(), '',
+                    lambda description:
+                        create_gist(self.public, self.view if gistify else None, text, filename, description),
+                    None, None),
+            None, None)
+
+class GistCopyUrl(sublime_plugin.TextCommand):
+    def is_enabled(self):
+        return self.view.settings().get("gist_html_url") is not None
+
+    def run(self, edit):
+        sublime.set_clipboard(self.view.settings().get("gist_html_url"))
+
+class GistOpenBrowser(sublime_plugin.TextCommand):
+    def is_enabled(self):
+        return self.view.settings().get("gist_html_url") is not None
+
+    def run(self, edit):
+        webbrowser.open(self.view.settings().get("gist_html_url"))
+
+class GistUpdateCommand(sublime_plugin.TextCommand):
+    def is_enabled(self):
+        return self.view.settings().get("gist_url") is not None
+
+    def is_visible(self):
+        # wget doesn't support changing HTTP method
+        return api_request != api_request_wget
+
+    @catching_credential_errors
+    def run(self, edit):
+        text = self.view.substr(sublime.Region(0, self.view.size()))
+        update_gist(self.view.settings().get("gist_url"), self.view.settings().get("gist_filename"), text)
+
+class GistPrivateCommand(GistCommand):
+    public = False
 
 class GistListCommand(sublime_plugin.WindowCommand):
     @catching_credential_errors
     def run(self):
         gists = get_gists()
-        self.window.show_quick_panel(gists, self.on_done)
 
-    @catching_credential_errors
-    def on_done(self, num):
-        get_gist(_gistsUrls[num])
+        gist_urls = []
+        gist_names = []
+
+        for gist in gists:
+            if gist['description']:
+                gist_names.append(gist['description'])
+            else:
+                gist_names.append(u'[No Name]')
+            gist_urls.append(gist['url'])
+
+        self.window.show_quick_panel(
+            gist_names,
+            lambda num: get_gist(gist_urls[num]))

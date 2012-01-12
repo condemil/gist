@@ -11,6 +11,9 @@
                 [
                     { "command": "gist", "caption": "Create Public Gist" },
                     { "command": "gist_private", "caption": "Create Private Gist" },
+                    { "command": "gist_copy_url", "caption": "Copy Gist URL" },
+                    { "command": "gist_open_browser", "caption": "Open Gist In Browser"},
+                    { "command": "gist_update", "caption": "Update Gist" },
                     { "command": "gist_list", "caption": "Get Gist List" }
                 ]
             }

@@ -8,6 +8,18 @@
         "command": "gist_private"
     },
     {
+        "caption": "Gist: Copy Gist URL",
+        "command": "gist_copy_url"
+    },
+    {
+        "caption": "Gist: Open Gist In Browser",
+        "command": "gist_open_browser"
+    },
+    {
+        "caption": "Gist: Update Gist",
+        "command": "gist_update"
+    },
+    {
         "caption": "Gist: Get List",
         "command": "gist_list"
     }
