@@ -7,6 +7,7 @@ import base64
 import urllib2
 import subprocess
 import functools
+import webbrowser
 
 DEFAULT_CREATE_PUBLIC_VALUE = 'false'
 DEFAULT_USE_PROXY_VALUE = 'false'
@@ -115,6 +116,9 @@ def create_gist(description, public):
     data = json.dumps({ 'description': description, 'public': public, 'files': { _fileName: {'content': _selectedText} }})
     result = api_request(url, data)
     sublime.set_clipboard(result['html_url'])
+    if settings.get("open_in_browser"):
+        webbrowser.open(result['html_url'])
+    sublime.status_message("Gist: " + result['html_url'])
 
 def get_gist(url_gist):
     gists = api_request(url_gist)
