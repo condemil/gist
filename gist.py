@@ -127,12 +127,12 @@ def get_gists():
     gistsNames = []
 
     for gist in gists:
-        if(gist['description'] != ''):
-            gistsNames.append([gist['description']])
+        if gist['description']:
+            gistsNames.append(gist['description'])
         else:
-            gistsNames.append([u'[No Name]'])
+            gistsNames.append(u'[No Name]')
 
-        _gistsUrls.append([gist['url']])
+        _gistsUrls.append(gist['url'])
 
     return gistsNames
 
@@ -260,4 +260,4 @@ class GistListCommand(sublime_plugin.WindowCommand):
 
     @catching_credential_errors
     def on_done(self, num):
-        get_gist(_gistsUrls[num][0])
+        get_gist(_gistsUrls[num])
