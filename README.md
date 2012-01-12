@@ -20,7 +20,7 @@ Then clone this repository:
 Options
 -------
 
-Copy the `Gist.sublime-settings` file from Packages/Gist to Packages/User sub-directory and edit:
+If you're using OS X and have a keychain entry for github.com, no configuration is needed. Otherwise, copy the `Gist.sublime-settings` file from Packages/Gist to Packages/User sub-directory and edit:
 
 *   `"username": ""`
 
