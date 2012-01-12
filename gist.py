@@ -56,35 +56,35 @@ if sublime.platform() == 'osx':
             item = c_void_p()
 
             error = lib_security.SecKeychainFindInternetPassword(
-               None,
-               c_uint32(len(SERVER)),
-               c_char_p(SERVER),
-               c_uint32(0),
-               None,
-               c_uint32(0 if not username else len(username)),
-               None if not username else c_char_p(username),
-               c_uint32(0),
-               None,
-               c_uint32(0),
+               None, # keychain, NULL = default
+               c_uint32(len(SERVER)), # server name length
+               c_char_p(SERVER),      # server name
+               c_uint32(0), # security domain - unused
+               None,        # security domain - unused
+               c_uint32(0 if not username else len(username)), # account name length
+               None if not username else c_char_p(username),   # account name
+               c_uint32(0), # path name length - unused
+               None,        # path name
+               c_uint32(0), # port, 0 = any
                c_int(0), # kSecProtocolTypeAny
                c_int(0), # kSecAuthenticationTypeAny
-               None,
-               None,
-               byref(item))
+               None, # returned password length - unused
+               None, # returned password data - unused
+               byref(item)) # returned keychain item reference
             if not error:
-                info = SecKeychainAttributeInfo()
-                info.count = 1
-                info.tag = pointer(c_uint32(1633903476)) # kSecAccountItemAttr
-                info.format = pointer(c_uint32(6)) # CSSM_DB_ATTRIBUTE_FORMAT_BLOB
+                info = SecKeychainAttributeInfo(
+                    1, # attribute count
+                    pointer(c_uint32(1633903476)), # kSecAccountItemAttr
+                    pointer(c_uint32(6))) # CSSM_DB_ATTRIBUTE_FORMAT_BLOB
 
                 attrlist_ptr = pointer(SecKeychainAttributeList())
                 error = lib_security.SecKeychainItemCopyAttributesAndData(
-                    item,
-                    byref(info),
-                    None,
-                    byref(attrlist_ptr),
-                    byref(password_buflen),
-                    byref(password_buf))
+                    item, # keychain item reference
+                    byref(info), # list of attributes to retrieve
+                    None, # returned item class - unused
+                    byref(attrlist_ptr), # returned attribute data
+                    byref(password_buflen), # returned password length
+                    byref(password_buf)) # returned password data
 
                 if not error:
                     try:
