@@ -130,12 +130,10 @@ def gistify_view(view, gist, gist_filename):
     view.settings().set('gist_html_url', gist["html_url"])
     view.settings().set('gist_url', gist["url"])
     view.settings().set('gist_filename', gist_filename)
-    view.set_status("Gist", "Gist")
+    view.set_status("Gist", "Gist %s" % gist_title(gist))
 
-@catching_credential_errors
 def get_gist(url_gist):
     gist = api_request(url_gist)
-    gist_title = gist.get('description') or u'[No name]'
     for gist_filename, file_data in gist['files'].items():
         view = sublime.active_window().new_file()
 
@@ -147,6 +145,9 @@ def get_gist(url_gist):
 
 def get_gists():
     return api_request(GISTS_URL)
+
+def gist_title(gist):
+    return gist.get('description') or gist.get('id')
 
 def api_request_native(url_api, data = '', method = None):
     request = urllib2.Request(url_api)
@@ -283,15 +284,9 @@ class GistListCommand(sublime_plugin.WindowCommand):
     def run(self):
         gists = get_gists()
 
-        gist_urls = []
-        gist_names = []
+        gist_names = [gist_title(gist) for gist in gists]
+        gist_urls = [gist['url'] for gist in gists]
 
-        for gist in gists:
-            if gist['description']:
-                gist_names.append(gist['description'])
-            else:
-                gist_names.append(u'[No Name]')
-            gist_urls.append(gist['url'])
 
         self.window.show_quick_panel(
             gist_names,
