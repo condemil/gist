@@ -349,11 +349,11 @@ class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
         @catch_errors
         def on_gist_description(description):
-            if description and description != old_description:
+            if description and description != self.gist_description():
                 gist_url = self.gist_url()
                 new_gist = update_gist(gist_url, {}, description)
                 for window in sublime.windows():
-                    for view in sublime.views():
+                    for view in window.views():
                         if view.settings().get('gist_url') == gist_url:
                             gistify_view(view, new_gist, view.settings().get('gist_filename'))
                 sublime.status_message('Gist description changed')
