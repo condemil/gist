@@ -143,14 +143,18 @@ def update_gist(gist_url, file_changes, new_description=None):
     return result
 
 def gistify_view(view, gist, gist_filename):
-    if not view.name() and not view.file_name():
+    statusline_string = "Gist: " + gist_title(gist)
+
+    if not view.file_name():
         view.set_name(gist_filename)
+    elif os.path.basename(view.file_name()) != gist_filename:
+        statusline_string = "%s (%s)" % (statusline_string, gist_filename)
 
     view.settings().set('gist_html_url', gist["html_url"])
     view.settings().set('gist_description', gist['description'])
     view.settings().set('gist_url', gist["url"])
     view.settings().set('gist_filename', gist_filename)
-    view.set_status("Gist", "Gist %s" % gist_title(gist))
+    view.set_status("Gist", statusline_string)
 
 def ungistify_view(view):
     view.settings().erase('gist_html_url')
@@ -337,10 +341,8 @@ class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
             if filename and filename != old_filename:
                 text = self.view.substr(sublime.Region(0, self.view.size()))
                 file_changes = {old_filename: {'filename': filename, 'content': text}}
-                update_gist(self.gist_url(), file_changes)
-                self.view.settings().set('gist_filename', filename)
-                if self.view.name() == old_filename or not (self.view.name() or self.view.file_name()):
-                    self.view.set_name(filename)
+                new_gist = update_gist(self.gist_url(), file_changes)
+                gistify_view(self.view, new_gist, filename)
                 sublime.status_message('Gist file renamed')
 
         self.view.window().show_input_panel('New File Name:', old_filename, on_filename, None, None)
