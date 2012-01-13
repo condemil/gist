@@ -16,7 +16,7 @@
                     { "caption": "-" },
                     { "command": "gist_copy_url", "caption": "Copy Gist URL" },
                     { "command": "gist_open_browser", "caption": "Open Gist In Browser"},
-                    { "command": "gist_update", "caption": "Update File" },
+                    { "command": "gist_update_file", "caption": "Update File" },
                     { "command": "gist_rename_file", "caption": "Rename File…" },
                     { "command": "gist_delete_file", "caption": "Delete File" },
                     { "command": "gist_change_description", "caption": "Change Gist Description…" },
