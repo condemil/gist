@@ -33,7 +33,7 @@
     },
     {
         "caption": "Gist: Change Gist Description",
-        "command": "gist_rename"
+        "command": "gist_change_description"
     },
     {
         "caption": "Gist: Delete Gist",

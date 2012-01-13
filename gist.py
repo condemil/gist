@@ -147,12 +147,14 @@ def gistify_view(view, gist, gist_filename):
         view.set_name(gist_filename)
 
     view.settings().set('gist_html_url', gist["html_url"])
+    view.settings().set('gist_description', gist['description'])
     view.settings().set('gist_url', gist["url"])
     view.settings().set('gist_filename', gist_filename)
     view.set_status("Gist", "Gist %s" % gist_title(gist))
 
 def ungistify_view(view):
     view.settings().erase('gist_html_url')
+    view.settings().erase('gist_description')
     view.settings().erase('gist_url')
     view.settings().erase('gist_filename')
     view.erase_status("Gist")
@@ -313,7 +315,10 @@ class GistViewCommand(object):
         return self.view.settings().get("gist_html_url")
 
     def gist_filename(self):
-        return self.view.settings().get("gist_filename")
+        return self.view.settings().get("gist_description")
+
+    def gist_description(self):
+        return self.view.settings().get("gist_description")
 
 class GistCopyUrl(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
@@ -329,7 +334,7 @@ class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
 
         @catch_errors
         def on_filename(filename):
-            if filename:
+            if filename and filename != old_filename:
                 text = self.view.substr(sublime.Region(0, self.view.size()))
                 file_changes = {old_filename: {'filename': filename, 'content': text}}
                 update_gist(self.gist_url(), file_changes)
@@ -339,6 +344,21 @@ class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
                 sublime.status_message('Gist file renamed')
 
         self.view.window().show_input_panel('New File Name:', old_filename, on_filename, None, None)
+
+class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
+    def run(self, edit):
+        @catch_errors
+        def on_gist_description(description):
+            if description and description != old_description:
+                gist_url = self.gist_url()
+                new_gist = update_gist(gist_url, {}, description)
+                for window in sublime.windows():
+                    for view in sublime.views():
+                        if view.settings().get('gist_url') == gist_url:
+                            gistify_view(view, new_gist, view.settings().get('gist_filename'))
+                sublime.status_message('Gist description changed')
+
+        self.view.window().show_input_panel('New Description:', self.gist_description() or '', on_gist_description, None, None)
 
 class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
