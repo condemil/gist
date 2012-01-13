@@ -243,7 +243,7 @@ def api_request_curl(url, data=None, method=None):
             os.unlink(data_file.name)
             data_file.close()
 
-api_request = api_request_curl# if ('ssl' not in sys.modules and os.name != 'nt') else api_request_native
+api_request = api_request_curl if ('ssl' not in sys.modules and os.name != 'nt') else api_request_native
 
 class GistCommand(sublime_plugin.TextCommand):
     public = True
