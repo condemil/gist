@@ -12,7 +12,7 @@
         "command": "gist_list"
     },
     {
-        "caption": "Gist: Add File To Gist",
+        "caption": "Gist: Add File to Gist",
         "command": "gist_add_file"
     },
     {
@@ -20,7 +20,7 @@
         "command": "gist_copy_url"
     },
     {
-        "caption": "Gist: Open Gist In Browser",
+        "caption": "Gist: Open Gist in Browser",
         "command": "gist_open_browser"
     },
     {
