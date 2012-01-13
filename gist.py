@@ -287,7 +287,9 @@ class GistListCommand(sublime_plugin.WindowCommand):
         gist_names = [gist_title(gist) for gist in gists]
         gist_urls = [gist['url'] for gist in gists]
 
+        @catching_credential_errors
+        def open_gist(num):
+            if num != -1:
+                get_gist(gist_urls[num])
 
-        self.window.show_quick_panel(
-            gist_names,
-            lambda num: get_gist(gist_urls[num]))
+        self.window.show_quick_panel(gist_names, open_gist)
