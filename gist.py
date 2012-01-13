@@ -109,15 +109,13 @@ def catching_credential_errors(fn):
             sublime.error_message("GitHub username or password isn't provided in Gist.sublime-settings file")
     return _fn
 
-@catching_credential_errors
-def create_gist(public, view, text, filename, description):
+def create_gist(public, text, filename, description):
     data = json.dumps({'description': description, 'public': public, 'files': {filename: {'content': text}}})
     gist = api_request(GISTS_URL, data)
     gist_html_url = gist['html_url']
     sublime.set_clipboard(gist_html_url)
     sublime.status_message("Gist: " + gist_html_url)
-    if view:
-        gistify_view(view, gist, filename)
+    return gist
 
 @catching_credential_errors
 def update_gist(gist_url, gist_filename, text):
@@ -233,20 +231,25 @@ class GistCommand(sublime_plugin.TextCommand):
         else:
             gistify = False
 
-        for region in selections:
-            self.prompt_gist_name(gistify, self.view.substr(region))
+        window = self.view.window()
 
-    def prompt_gist_name(self, gistify, text):
-        filename = os.path.basename(self.view.file_name()) if self.view.file_name() else ''
-        self.view.window().show_input_panel(
-            '%s Gist File Name: (optional):' % self.mode(), filename,
-            lambda filename:
-                self.view.window().show_input_panel(
-                    '%s Gist Description (optional):' % self.mode(), '',
-                    lambda description:
-                        create_gist(self.public, self.view if gistify else None, text, filename, description),
-                    None, None),
-            None, None)
+        def create_gist_with_text(text):
+            filename = os.path.basename(self.view.file_name()) if self.view.file_name() else ''
+
+            def on_gist_filename(filename):
+                @catching_credential_errors
+                def on_gist_description(description):
+                    gist = create_gist(self.public, text, filename, description)
+                    print gist
+                    if gistify:
+                        gistify_view(self.view, gist, filename)
+
+                window.show_input_panel('%s Gist Description (optional):' % self.mode(), '', on_gist_description, None, None)
+
+            window.show_input_panel('%s Gist File Name: (optional):' % self.mode(), filename, on_gist_filename, None, None)
+
+        for region in selections:
+            create_gist_with_text(self.view.substr(region))
 
 class GistCopyUrl(sublime_plugin.TextCommand):
     def is_enabled(self):
