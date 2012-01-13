@@ -142,7 +142,7 @@ def update_gist(gist_url, file_changes, description):
     return result
 
 def gistify_view(view, gist, gist_filename):
-    if not view.name():
+    if not view.name() and not view.file_name():
         view.set_name(gist_filename)
 
     view.settings().set('gist_html_url', gist["html_url"])
@@ -338,7 +338,7 @@ class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
                 file_changes = {old_filename: {'filename': filename, 'content': text}}
                 update_gist(self.gist_url(), file_changes, self.gist_description())
                 self.view.settings().set('gist_filename', filename)
-                if self.view.name() == old_filename or not self.view.name():
+                if self.view.name() == old_filename or not (self.view.name() or self.view.file_name()):
                     self.view.set_name(filename)
                 sublime.status_message('Gist file renamed')
 
