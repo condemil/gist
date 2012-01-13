@@ -20,20 +20,20 @@
         "command": "gist_open_browser"
     },
     {
-        "caption": "Gist: Update Gist",
-        "command": "gist_update"
+        "caption": "Gist: Update File",
+        "command": "gist_update_file"
     },
     {
         "caption": "Gist: Rename File",
         "command": "gist_rename_file"
     },
     {
-        "caption": "Gist: Change Gist Description",
-        "command": "gist_rename"
-    },
-    {
         "caption": "Gist: Delete Gist File",
         "command": "gist_delete_file"
+    },
+    {
+        "caption": "Gist: Change Gist Description",
+        "command": "gist_rename"
     },
     {
         "caption": "Gist: Delete Gist",

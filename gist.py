@@ -325,7 +325,7 @@ class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
 
         self.view.window().show_input_panel('New File Name:', old_filename, on_filename, None, None)
 
-class GistUpdateCommand(GistViewCommand, sublime_plugin.TextCommand):
+class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
         text = self.view.substr(sublime.Region(0, self.view.size()))
