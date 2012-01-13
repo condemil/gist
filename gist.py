@@ -209,10 +209,7 @@ def api_request_wget(url_api, data = '', method = None):
 
     return json.loads(response)
 
-if not 'ssl' in sys.modules and not os.name == 'nt':
-    api_request = api_request_wget
-else:
-    api_request = api_request_native
+api_request = api_request_wget if ('ssl' not in sys.modules and os.name != 'nt') else api_request_native
 
 class GistCommand(sublime_plugin.TextCommand):
     public = True
