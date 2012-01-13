@@ -1,11 +1,15 @@
 [
     {
-        "caption": "Gist (public): Create from Selected Text",
+        "caption": "Gist: Create Public Gist",
         "command": "gist"
     },
     {
-        "caption": "Gist (private): Create from Selected Text",
+        "caption": "Gist: Create Private Gist",
         "command": "gist_private"
+    },
+    {
+        "caption": "Gist: Open Gist",
+        "command": "gist_list"
     },
     {
         "caption": "Gist: Copy Gist URL",
@@ -20,7 +24,19 @@
         "command": "gist_update"
     },
     {
-        "caption": "Gist: Get List",
-        "command": "gist_list"
+        "caption": "Gist: Rename File",
+        "command": "gist_rename_file"
+    },
+    {
+        "caption": "Gist: Change Gist Description",
+        "command": "gist_rename"
+    },
+    {
+        "caption": "Gist: Delete Gist File",
+        "command": "gist_delete_file"
+    },
+    {
+        "caption": "Gist: Delete Gist",
+        "command": "gist_delete"
     }
 ]

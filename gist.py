@@ -264,24 +264,20 @@ class GistCommand(sublime_plugin.TextCommand):
         for region in selections:
             create_gist_with_text(self.view.substr(region))
 
-class GistCopyUrl(sublime_plugin.TextCommand):
-    def is_enabled(self):
-        return self.view.settings().get("gist_html_url") is not None
-
-    def run(self, edit):
-        sublime.set_clipboard(self.view.settings().get("gist_html_url"))
-
-class GistOpenBrowser(sublime_plugin.TextCommand):
-    def is_enabled(self):
-        return self.view.settings().get("gist_html_url") is not None
-
-    def run(self, edit):
-        webbrowser.open(self.view.settings().get("gist_html_url"))
-
-class GistUpdateCommand(sublime_plugin.TextCommand):
+class GistViewCommand(object):
+    """A base class for commands operating on a gistified view"""
     def is_enabled(self):
         return self.view.settings().get("gist_url") is not None
 
+class GistCopyUrl(GistViewCommand, sublime_plugin.TextCommand):
+    def run(self, edit):
+        sublime.set_clipboard(self.view.settings().get("gist_html_url"))
+
+class GistOpenBrowser(GistViewCommand, sublime_plugin.TextCommand):
+    def run(self, edit):
+        webbrowser.open(self.view.settings().get("gist_html_url"))
+
+class GistUpdateCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
         text = self.view.substr(sublime.Region(0, self.view.size()))
