@@ -117,7 +117,6 @@ def create_gist(public, text, filename, description):
     sublime.status_message("Gist: " + gist_html_url)
     return gist
 
-@catching_credential_errors
 def update_gist(gist_url, gist_filename, text):
     data = json.dumps({'files': {gist_filename: {'content': text}}})
     result = api_request(gist_url, data, method="PATCH")
