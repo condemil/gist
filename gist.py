@@ -390,17 +390,42 @@ class GistDeleteCommand(GistViewCommand, sublime_plugin.TextCommand):
 class GistPrivateCommand(GistCommand):
     public = False
 
-class GistListCommand(sublime_plugin.WindowCommand):
+class GistListCommandBase(object):
     @catch_errors
-    def run(self):
+    def run(self, *args):
         gists = get_gists()
-
         gist_names = [gist_title(gist) for gist in gists]
-        gist_urls = [gist['url'] for gist in gists]
 
-        @catch_errors
-        def open_gist(num):
+        def on_gist_num(num):
             if num != -1:
-                open_gist(gist_urls[num])
+                self.handle_gist(gists[num])
 
-        self.window.show_quick_panel(gist_names, open_gist)
+        self.get_window().show_quick_panel(gist_names, on_gist_num)
+
+class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
+    @catch_errors
+    def handle_gist(self, gist):
+        open_gist(gist['url'])
+
+    def get_window(self):
+        return self.window
+
+class GistAddFileCommand(GistListCommandBase, sublime_plugin.TextCommand):
+    def is_enabled(self):
+        return self.view.settings().get('gist_url') is None
+
+    def handle_gist(self, gist):
+        @catch_errors
+        def on_filename(filename):
+            if filename:
+                text = self.view.substr(sublime.Region(0, self.view.size()))
+                changes = {filename: {'content': text}}
+                new_gist = update_gist(gist['url'], changes)
+                gistify_view(self.view, new_gist, filename)
+                sublime.status_message("File added to Gist")
+
+        filename = os.path.basename(self.view.file_name() if self.view.file_name() else '')
+        self.view.window().show_input_panel('File Name:', filename, on_filename, None, None)
+
+    def get_window(self):
+        return self.view.window()

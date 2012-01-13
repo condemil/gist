@@ -12,6 +12,10 @@
         "command": "gist_list"
     },
     {
+        "caption": "Gist: Add File To Gist",
+        "command": "gist_add_file"
+    },
+    {
         "caption": "Gist: Copy Gist URL",
         "command": "gist_copy_url"
     },

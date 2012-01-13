@@ -12,6 +12,7 @@
                     { "command": "gist", "caption": "Create Public Gist…" },
                     { "command": "gist_private", "caption": "Create Private Gist…" },
                     { "command": "gist_list", "caption": "Open Gist…" },
+                    { "command": "gist_add_file", "caption": "Add To Gist…" },
                     { "caption": "-" },
                     { "command": "gist_copy_url", "caption": "Copy Gist URL" },
                     { "command": "gist_open_browser", "caption": "Open Gist In Browser"},
