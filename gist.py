@@ -128,12 +128,10 @@ def catch_errors(fn):
             sublime.error_message("Gist: unknown error (please, report a bug!)")
     return _fn
 
-def create_gist(public, text, filename, description):
-    data = json.dumps({'description': description, 'public': public, 'files': {filename: {'content': text}}})
+def create_gist(public, description, files):
+    file_data = dict((filename, {'content': text}) for filename, text in files.items())
+    data = json.dumps({'description': description, 'public': public, 'files': file_data})
     gist = api_request(GISTS_URL, data)
-    gist_html_url = gist['html_url']
-    sublime.set_clipboard(gist_html_url)
-    sublime.status_message("Gist: " + gist_html_url)
     return gist
 
 def update_gist(gist_url, gist_filename, text):
@@ -150,8 +148,8 @@ def gistify_view(view, gist, gist_filename):
     view.settings().set('gist_filename', gist_filename)
     view.set_status("Gist", "Gist %s" % gist_title(gist))
 
-def get_gist(url_gist):
-    gist = api_request(url_gist)
+def open_gist(gist_url):
+    gist = api_request(gist_url)
     for gist_filename, file_data in gist['files'].items():
         view = sublime.active_window().new_file()
 
@@ -236,33 +234,54 @@ class GistCommand(sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
         get_credentials()
-        selections = [region for region in self.view.sel() if not region.empty()]
+        regions = [region for region in self.view.sel() if not region.empty()]
 
-        if len(selections) == 0:
-            selections = [sublime.Region(0, self.view.size())]
+        if len(regions) == 0:
+            regions = [sublime.Region(0, self.view.size())]
             gistify = True
         else:
             gistify = False
 
+        region_data = [self.view.substr(region) for region in regions]
+
         window = self.view.window()
 
-        def create_gist_with_text(text):
-            filename = os.path.basename(self.view.file_name()) if self.view.file_name() else ''
+        def on_gist_description(description):
+            filename = os.path.basename(self.view.file_name() if self.view.file_name() else '')
 
+            @catch_errors
             def on_gist_filename(filename):
-                @catch_errors
-                def on_gist_description(description):
-                    gist = create_gist(self.public, text, filename, description)
-                    print gist
-                    if gistify:
-                        gistify_view(self.view, gist, filename)
+                # We need to figure out the filenames. Right now, the following logic is used:
+                #   If there's only 1 selection, just pass whatever the user typed to Github. It'll rename empty files for us.
+                #   If there are multiple selections and user entered a filename, rename the files from foo.js to
+                #       foo (1).js, foo (2).js, etc.
+                #   If there are multiple selections and user didn't enter anything, post the files as
+                #       $SyntaxName 1, $SyntaxName 2, etc.
+                if len(region_data) == 1:
+                    gist_data = {filename: region_data[0]}
+                else:
+                    if filename:
+                        (namepart, extpart) = os.path.splitext(filename)
+                        make_filename = lambda num: "%s (%d)%s" % (namepart, num, extpart)
+                    else:
+                        syntax_name, _ = os.path.splitext(os.path.basename(self.view.settings().get('syntax')))
+                        make_filename = lambda num: "%s %d" % (syntax_name, num)
+                    gist_data = dict((make_filename(idx), data) for idx, data in enumerate(region_data, 1))
 
-                window.show_input_panel('%s Gist Description (optional):' % self.mode(), '', on_gist_description, None, None)
+                gist = create_gist(self.public, description, gist_data)
 
-            window.show_input_panel('%s Gist File Name: (optional):' % self.mode(), filename, on_gist_filename, None, None)
+                if gistify:
+                    gistify_view(self.view, gist, filename)
+                else:
+                    open_gist(gist['url'])
 
-        for region in selections:
-            create_gist_with_text(self.view.substr(region))
+                gist_html_url = gist['html_url']
+                sublime.set_clipboard(gist_html_url)
+                sublime.status_message("%s Gist: %s" % (self.mode(), gist_html_url))
+
+            window.show_input_panel('Gist File Name: (optional):', filename, on_gist_filename, None, None)
+
+        window.show_input_panel("Gist Description (optional):", '', on_gist_description, None, None)
 
 class GistViewCommand(object):
     """A base class for commands operating on a gistified view"""
@@ -297,6 +316,6 @@ class GistListCommand(sublime_plugin.WindowCommand):
         @catch_errors
         def open_gist(num):
             if num != -1:
-                get_gist(gist_urls[num])
+                open_gist(gist_urls[num])
 
         self.window.show_quick_panel(gist_names, open_gist)
