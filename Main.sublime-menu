@@ -9,9 +9,18 @@
                 "caption": "Gist",
                 "children":
                 [
-                    { "command": "gist", "caption": "Create Public Gist" },
-                    { "command": "gist_private", "caption": "Create Private Gist" },
-                    { "command": "gist_list", "caption": "Get Gist List" }
+                    { "command": "gist", "caption": "Create Public Gist…" },
+                    { "command": "gist_private", "caption": "Create Private Gist…" },
+                    { "command": "gist_list", "caption": "Open Gist…" },
+                    { "command": "gist_add_file", "caption": "Add To Gist…" },
+                    { "caption": "-" },
+                    { "command": "gist_copy_url", "caption": "Copy Gist URL" },
+                    { "command": "gist_open_browser", "caption": "Open Gist In Browser"},
+                    { "command": "gist_update_file", "caption": "Update File" },
+                    { "command": "gist_rename_file", "caption": "Rename File…" },
+                    { "command": "gist_delete_file", "caption": "Delete File" },
+                    { "command": "gist_change_description", "caption": "Change Gist Description…" },
+                    { "command": "gist_delete", "caption": "Delete Gist" }
                 ]
             }
 

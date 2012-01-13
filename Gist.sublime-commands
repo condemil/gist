@@ -1,14 +1,46 @@
 [
     {
-        "caption": "Gist (public): Create from Selected Text",
+        "caption": "Gist: Create Public Gist",
         "command": "gist"
     },
     {
-        "caption": "Gist (private): Create from Selected Text",
+        "caption": "Gist: Create Private Gist",
         "command": "gist_private"
     },
     {
-        "caption": "Gist: Get List",
+        "caption": "Gist: Open Gist",
         "command": "gist_list"
+    },
+    {
+        "caption": "Gist: Add File To Gist",
+        "command": "gist_add_file"
+    },
+    {
+        "caption": "Gist: Copy Gist URL",
+        "command": "gist_copy_url"
+    },
+    {
+        "caption": "Gist: Open Gist In Browser",
+        "command": "gist_open_browser"
+    },
+    {
+        "caption": "Gist: Update File",
+        "command": "gist_update_file"
+    },
+    {
+        "caption": "Gist: Rename File",
+        "command": "gist_rename_file"
+    },
+    {
+        "caption": "Gist: Delete Gist File",
+        "command": "gist_delete_file"
+    },
+    {
+        "caption": "Gist: Change Gist Description",
+        "command": "gist_change_description"
+    },
+    {
+        "caption": "Gist: Delete Gist",
+        "command": "gist_delete"
     }
 ]
