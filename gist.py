@@ -134,10 +134,13 @@ def create_gist(public, description, files):
     gist = api_request(GISTS_URL, data)
     return gist
 
-def update_gist(gist_url, gist_filename, text):
-    data = json.dumps({'files': {gist_filename: {'content': text}}})
+def update_gist(gist_url, file_changes, new_description=None):
+    request = {'files': file_changes}
+    if new_description is not None:
+        request['description'] = new_description
+    data = json.dumps(request)
     result = api_request(gist_url, data, method="PATCH")
-    sublime.status_message("Gist updated")
+    return result
 
 def gistify_view(view, gist, gist_filename):
     if not view.name():
@@ -270,14 +273,14 @@ class GistCommand(sublime_plugin.TextCommand):
 
                 gist = create_gist(self.public, description, gist_data)
 
+                gist_html_url = gist['html_url']
+                sublime.set_clipboard(gist_html_url)
+                sublime.status_message("%s Gist: %s" % (self.mode(), gist_html_url))
+
                 if gistify:
                     gistify_view(self.view, gist, filename)
                 else:
                     open_gist(gist['url'])
-
-                gist_html_url = gist['html_url']
-                sublime.set_clipboard(gist_html_url)
-                sublime.status_message("%s Gist: %s" % (self.mode(), gist_html_url))
 
             window.show_input_panel('Gist File Name: (optional):', filename, on_gist_filename, None, None)
 
@@ -286,21 +289,49 @@ class GistCommand(sublime_plugin.TextCommand):
 class GistViewCommand(object):
     """A base class for commands operating on a gistified view"""
     def is_enabled(self):
-        return self.view.settings().get("gist_url") is not None
+        return self.gist_url() is not None
+
+    def gist_url(self):
+        return self.view.settings().get("gist_url")
+
+    def gist_html_url(self):
+        return self.view.settings().get("gist_html_url")
+
+    def gist_filename(self):
+        return self.view.settings().get("gist_filename")
 
 class GistCopyUrl(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
-        sublime.set_clipboard(self.view.settings().get("gist_html_url"))
+        sublime.set_clipboard(self.gist_html_url())
 
 class GistOpenBrowser(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
-        webbrowser.open(self.view.settings().get("gist_html_url"))
+        webbrowser.open(self.gist_html_url())
+
+class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
+    def run(self, edit):
+        old_filename = self.gist_filename()
+
+        @catch_errors
+        def on_filename(filename):
+            if filename:
+                text = self.view.substr(sublime.Region(0, self.view.size()))
+                file_changes = {old_filename: {'filename': filename, 'content': text}}
+                update_gist(self.gist_url(), file_changes)
+                self.view.settings().set('gist_filename', filename)
+                if self.view.name() == old_filename or not self.view.name():
+                    self.view.set_name(filename)
+                sublime.status_message('Gist file renamed')
+
+        self.view.window().show_input_panel('New File Name:', old_filename, on_filename, None, None)
 
 class GistUpdateCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
         text = self.view.substr(sublime.Region(0, self.view.size()))
-        update_gist(self.view.settings().get("gist_url"), self.view.settings().get("gist_filename"), text)
+        changes = {self.gist_filename(): {'content': text}}
+        update_gist(self.gist_url(), changes)
+        sublime.status_message("Gist updated")
 
 class GistPrivateCommand(GistCommand):
     public = False
