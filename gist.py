@@ -299,7 +299,7 @@ class GistCommand(sublime_plugin.TextCommand):
                 sublime.status_message("%s Gist: %s" % (self.mode(), gist_html_url))
 
                 if gistify:
-                    gistify_view(self.view, gist, filename)
+                    gistify_view(self.view, gist, gist['files'].keys()[0])
                 else:
                     open_gist(gist['url'])
 
