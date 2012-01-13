@@ -9,13 +9,14 @@ import subprocess
 import functools
 import webbrowser
 import tempfile
+import traceback
 
 DEFAULT_CREATE_PUBLIC_VALUE = 'false'
 DEFAULT_USE_PROXY_VALUE = 'false'
 settings = sublime.load_settings('Gist.sublime-settings')
 GISTS_URL = 'https://api.github.com/gists'
 
-class GistMissingCredentialsException(Exception):
+class MissingCredentialsException(Exception):
     pass
 
 class CurlNotFoundException(Exception):
@@ -25,7 +26,7 @@ def get_credentials():
     username = settings.get('username')
     password = settings.get('password')
     if not username or not password:
-        raise GistMissingCredentialsException()
+        raise MissingCredentialsException()
     return (username, password)
 
 if sublime.platform() == 'osx':
@@ -97,20 +98,34 @@ if sublime.platform() == 'osx':
                         lib_security.SecKeychainItemFreeContent(attrlist_ptr, password_buf)
 
             if not username or not password:
-                raise GistMissingCredentialsException()
+                raise MissingCredentialsException()
             else:
                 return (username, password)
 
         return keychain_get_credentials
     get_credentials = create_keychain_accessor()
 
-def catching_credential_errors(fn):
+def catch_errors(fn):
     @functools.wraps(fn)
     def _fn(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except GistMissingCredentialsException:
-            sublime.error_message("GitHub username or password isn't provided in Gist.sublime-settings file")
+        except MissingCredentialsException:
+            sublime.error_message("Gist: GitHub username or password isn't provided in Gist.sublime-settings file")
+        except subprocess.CalledProcessError as err:
+            sublime.error_message("Gist: Error while contacting GitHub: cURL returned %d" % err.returncode)
+        except EnvironmentError as err:
+            traceback.print_exc()
+            if type(err) == OSError and err.errno == 2 and api_request == api_request_curl:
+                sublime.error_message("Gist: Unable to find Python SSL module or cURL")
+            else:
+                msg = "Gist: Error while contacting GitHub"
+                if err.strerror:
+                    msg += err.strerror
+                sublime.error_message(msg)
+        except:
+            traceback.print_exc()
+            sublime.error_message("Gist: unknown error (please, report a bug!)")
     return _fn
 
 def create_gist(public, text, filename, description):
@@ -218,7 +233,7 @@ class GistCommand(sublime_plugin.TextCommand):
     def mode(self):
         return "Public" if self.public else "Private"
 
-    @catching_credential_errors
+    @catch_errors
     def run(self, edit):
         get_credentials()
         selections = [region for region in self.view.sel() if not region.empty()]
@@ -235,7 +250,7 @@ class GistCommand(sublime_plugin.TextCommand):
             filename = os.path.basename(self.view.file_name()) if self.view.file_name() else ''
 
             def on_gist_filename(filename):
-                @catching_credential_errors
+                @catch_errors
                 def on_gist_description(description):
                     gist = create_gist(self.public, text, filename, description)
                     print gist
@@ -267,7 +282,7 @@ class GistUpdateCommand(sublime_plugin.TextCommand):
     def is_enabled(self):
         return self.view.settings().get("gist_url") is not None
 
-    @catching_credential_errors
+    @catch_errors
     def run(self, edit):
         text = self.view.substr(sublime.Region(0, self.view.size()))
         update_gist(self.view.settings().get("gist_url"), self.view.settings().get("gist_filename"), text)
@@ -276,14 +291,14 @@ class GistPrivateCommand(GistCommand):
     public = False
 
 class GistListCommand(sublime_plugin.WindowCommand):
-    @catching_credential_errors
+    @catch_errors
     def run(self):
         gists = get_gists()
 
         gist_names = [gist_title(gist) for gist in gists]
         gist_urls = [gist['url'] for gist in gists]
 
-        @catching_credential_errors
+        @catch_errors
         def open_gist(num):
             if num != -1:
                 get_gist(gist_urls[num])
