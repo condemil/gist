@@ -314,7 +314,7 @@ class GistViewCommand(object):
         return self.view.settings().get("gist_html_url")
 
     def gist_filename(self):
-        return self.view.settings().get("gist_description")
+        return self.view.settings().get("gist_filename")
 
     def gist_description(self):
         return self.view.settings().get("gist_description")
