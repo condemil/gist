@@ -151,15 +151,22 @@ def gistify_view(view, gist, gist_filename):
     view.settings().set('gist_filename', gist_filename)
     view.set_status("Gist", "Gist %s" % gist_title(gist))
 
+def ungistify_view(view):
+    view.settings().erase('gist_html_url')
+    view.settings().erase('gist_url')
+    view.settings().erase('gist_filename')
+    view.erase_status("Gist")
+
 def open_gist(gist_url):
     gist = api_request(gist_url)
-    for gist_filename, file_data in gist['files'].items():
+    files = sorted(gist['files'].keys())
+    for gist_filename in files:
         view = sublime.active_window().new_file()
 
         gistify_view(view, gist, gist_filename)
 
         edit = view.begin_edit()
-        view.insert(edit, 0, file_data['content'])
+        view.insert(edit, 0, gist['files'][gist_filename]['content'])
         view.end_edit(edit)
 
 def get_gists():
@@ -186,8 +193,13 @@ def api_request_native(url, data=None, method=None):
         urllib2.install_opener(opener)
 
     response = urllib2.urlopen(request)
-
-    return json.loads(response.read())
+    try:
+        if response.code == 204: # No Content
+            return None
+        else:
+            return json.loads(response.read())
+    finally:
+        response.close()
 
 def api_request_curl(url, data=None, method=None):
     command = ["curl", '-K', '-', url]
@@ -220,13 +232,16 @@ def api_request_curl(url, data=None, method=None):
         if returncode != 0:
             raise subprocess.CalledProcessError(returncode, 'curl')
 
-        return json.loads(response)
+        if response: # No way to get 204 out of cURL, so just check if response text is empty
+            return json.loads(response)
+        else:
+            return None
     finally:
         if data_file:
             os.unlink(data_file.name)
             data_file.close()
 
-api_request = api_request_curl if ('ssl' not in sys.modules and os.name != 'nt') else api_request_native
+api_request = api_request_curl# if ('ssl' not in sys.modules and os.name != 'nt') else api_request_native
 
 class GistCommand(sublime_plugin.TextCommand):
     public = True
@@ -332,6 +347,25 @@ class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
         changes = {self.gist_filename(): {'content': text}}
         update_gist(self.gist_url(), changes)
         sublime.status_message("Gist updated")
+
+class GistDeleteFileCommand(GistViewCommand, sublime_plugin.TextCommand):
+    @catch_errors
+    def run(self, edit):
+        changes = {self.gist_filename(): None}
+        update_gist(self.gist_url(), changes)
+        ungistify_view(self.view)
+        sublime.status_message("Gist file deleted")
+
+class GistDeleteCommand(GistViewCommand, sublime_plugin.TextCommand):
+    @catch_errors
+    def run(self, edit):
+        gist_url = self.gist_url()
+        api_request(gist_url, method='DELETE')
+        for window in sublime.windows():
+            for view in window.views():
+                if view.settings().get("gist_url") == gist_url:
+                    ungistify_view(view)
+        sublime.status_message("Gist deleted")
 
 class GistPrivateCommand(GistCommand):
     public = False
