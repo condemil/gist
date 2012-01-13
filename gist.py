@@ -8,6 +8,7 @@ import urllib2
 import subprocess
 import functools
 import webbrowser
+import tempfile
 
 DEFAULT_CREATE_PUBLIC_VALUE = 'false'
 DEFAULT_USE_PROXY_VALUE = 'false'
@@ -15,6 +16,9 @@ settings = sublime.load_settings('Gist.sublime-settings')
 GISTS_URL = 'https://api.github.com/gists'
 
 class GistMissingCredentialsException(Exception):
+    pass
+
+class CurlNotFoundException(Exception):
     pass
 
 def get_credentials():
@@ -148,15 +152,15 @@ def get_gists():
 def gist_title(gist):
     return gist.get('description') or gist.get('id')
 
-def api_request_native(url_api, data = '', method = None):
-    request = urllib2.Request(url_api)
+def api_request_native(url, data=None, method=None):
+    request = urllib2.Request(url)
     if method:
         request.get_method = lambda: method
     request.add_header('Authorization', 'Basic ' + base64.urlsafe_b64encode("%s:%s" % get_credentials()))
     request.add_header('Accept', 'application/json')
     request.add_header('Content-Type', 'application/json')
 
-    if len(data) > 0:
+    if data is not None:
         request.add_data(data)
 
     if settings.get('https_proxy'):
@@ -169,47 +173,44 @@ def api_request_native(url_api, data = '', method = None):
 
     return json.loads(response.read())
 
-def api_request_wget(url_api, data = '', method = None):
-    dirs = ['/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin']
+def api_request_curl(url, data=None, method=None):
+    command = ["curl", '-K', '-', url]
 
-    for dir in dirs:
-        path = os.path.join(dir, 'wget')
+    authorization_string = '-u "%s:%s"' % get_credentials()
 
-        if os.path.exists(path):
-            wget = path
-            break
+    config = [authorization_string,
+              '--header "Accept: application/json"',
+              '--header "Content-Type: application/json"',
+              "--silent"]
 
-    if (not wget):
-        return False
-
-    authorization_string = "%s:%s" % get_credentials()
-
-    command = [wget, '-O', '-', '-q']
-    command.append('--header=Authorization: Basic ' + base64.urlsafe_b64encode(authorization_string))
-    command.append('--header=Accept: application/json')
-    command.append('--header=Content-Type: application/json')
-
-    if len(data) > 0:
-        command.append('--post-data=' + data)
-
-    command.append(url_api)
+    if method:
+        config.append('--request "%s"' % method)
 
     if settings.get('https_proxy'):
-        os.putenv('https_proxy', settings.get('https_proxy'))
+        config.append(settings.get('https_proxy'))
 
-    process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    data_file = None
+    try:
+        if data is not None:
+            data_file = tempfile.NamedTemporaryFile(delete=False)
+            data_file.write(data)
+            data_file.close()
+            config.append('--data-binary "@%s"' % data_file.name)
 
-    response = process.stdout.read()
+        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        response, _ = process.communicate('\n'.join(config))
+        returncode = process.returncode
 
-    returncode = process.wait()
+        if returncode != 0:
+            raise subprocess.CalledProcessError(returncode, 'curl')
 
-    if returncode != 0:
-        error = Exception('Wget exits with code %s' % returncode)
-        raise error
+        return json.loads(response)
+    finally:
+        if data_file:
+            os.unlink(data_file.name)
+            data_file.close()
 
-    return json.loads(response)
-
-api_request = api_request_wget if ('ssl' not in sys.modules and os.name != 'nt') else api_request_native
+api_request = api_request_curl if ('ssl' not in sys.modules and os.name != 'nt') else api_request_native
 
 class GistCommand(sublime_plugin.TextCommand):
     public = True
@@ -265,10 +266,6 @@ class GistOpenBrowser(sublime_plugin.TextCommand):
 class GistUpdateCommand(sublime_plugin.TextCommand):
     def is_enabled(self):
         return self.view.settings().get("gist_url") is not None
-
-    def is_visible(self):
-        # wget doesn't support changing HTTP method
-        return api_request != api_request_wget
 
     @catching_credential_errors
     def run(self, edit):
