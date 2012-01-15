@@ -10,6 +10,7 @@ import functools
 import webbrowser
 import tempfile
 import traceback
+import contextlib
 
 DEFAULT_CREATE_PUBLIC_VALUE = 'false'
 DEFAULT_USE_PROXY_VALUE = 'false'
@@ -21,6 +22,11 @@ class MissingCredentialsException(Exception):
 
 class CurlNotFoundException(Exception):
     pass
+
+class SimpleHTTPError(Exception):
+    def __init__(self, code, response):
+        self.code = code
+        self.response = response
 
 def get_credentials():
     username = settings.get('username')
@@ -123,6 +129,16 @@ def catch_errors(fn):
                 if err.strerror:
                     msg += err.strerror
                 sublime.error_message(msg)
+        except SimpleHTTPError as err:
+            msg = "Gist: GitHub returned error %d" % err.code
+            try:
+                response_json = json.loads(err.response)
+                response_msg = response_json.get('message')
+                if response_msg:
+                    msg += ": " + response_msg
+            except ValueError:
+                pass
+            sublime.error_message(msg)
         except:
             traceback.print_exc()
             sublime.error_message("Gist: unknown error (please, report a bug!)")
@@ -198,14 +214,24 @@ def api_request_native(url, data=None, method=None):
 
         urllib2.install_opener(opener)
 
-    response = urllib2.urlopen(request)
     try:
-        if response.code == 204: # No Content
-            return None
-        else:
-            return json.loads(response.read())
+        with contextlib.closing(urllib2.urlopen(request)) as response:
+            if response.code == 204: # No Content
+                return None
+            else:
+                return json.loads(response.read())
+    except urllib2.HTTPError as err:
+        with contextlib.closing(err):
+            raise SimpleHTTPError(err.code, err.read())
+
+@contextlib.contextmanager
+def named_tempfile():
+    tmpfile = tempfile.NamedTemporaryFile(delete=False)
+    try:
+        yield tmpfile
     finally:
-        response.close()
+        tmpfile.close()
+        os.unlink(tmpfile.name)
 
 def api_request_curl(url, data=None, method=None):
     command = ["curl", '-K', '-', url]
@@ -223,29 +249,32 @@ def api_request_curl(url, data=None, method=None):
     if settings.get('https_proxy'):
         config.append(settings.get('https_proxy'))
 
-    data_file = None
-    try:
-        if data is not None:
-            data_file = tempfile.NamedTemporaryFile(delete=False)
-            data_file.write(data)
-            data_file.close()
-            config.append('--data-binary "@%s"' % data_file.name)
+    with named_tempfile() as header_output_file:
+        config.append('--dump-header "%s"' % header_output_file.name)
+        header_output_file.close()
+        with named_tempfile() as data_file:
+            if data is not None:
+                data_file.write(data)
+                data_file.close()
+                config.append('--data-binary "@%s"' % data_file.name)
 
-        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        response, _ = process.communicate('\n'.join(config))
-        returncode = process.returncode
+            process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            response, _ = process.communicate('\n'.join(config))
+            returncode = process.returncode
 
-        if returncode != 0:
-            raise subprocess.CalledProcessError(returncode, 'curl')
+            if returncode != 0:
+                raise subprocess.CalledProcessError(returncode, 'curl')
 
-        if response: # No way to get 204 out of cURL, so just check if response text is empty
-            return json.loads(response)
-        else:
-            return None
-    finally:
-        if data_file:
-            os.unlink(data_file.name)
-            data_file.close()
+            with open(header_output_file.name, "r") as headers:
+                _, responsecode, message = headers.readline().split(None, 2)
+                responsecode = int(responsecode)
+
+                if responsecode == 204: # No Content
+                    return None
+                elif 200 <= responsecode < 300:
+                    return json.loads(response)
+                else:
+                    raise SimpleHTTPError(responsecode, response)
 
 api_request = api_request_curl if ('ssl' not in sys.modules and os.name != 'nt') else api_request_native
 
