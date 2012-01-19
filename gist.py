@@ -53,6 +53,8 @@ if sublime.platform() == 'osx':
         class SecKeychainAttributeList(Structure):
             _fields_ = [("count", c_uint32), ("attr", POINTER(SecKeychainAttribute))]
 
+        PtrSecKeychainAttributeList = POINTER(SecKeychainAttributeList)
+
         def keychain_get_credentials():
             username = settings.get('username')
             password = settings.get('password')
@@ -85,7 +87,7 @@ if sublime.platform() == 'osx':
                     pointer(c_uint32(1633903476)), # kSecAccountItemAttr
                     pointer(c_uint32(6))) # CSSM_DB_ATTRIBUTE_FORMAT_BLOB
 
-                attrlist_ptr = pointer(SecKeychainAttributeList())
+                attrlist_ptr = PtrSecKeychainAttributeList()
                 error = lib_security.SecKeychainItemCopyAttributesAndData(
                     item, # keychain item reference
                     byref(info), # list of attributes to retrieve
@@ -101,7 +103,7 @@ if sublime.platform() == 'osx':
                             username = string_at(attr.data, attr.length)
                             password = string_at(password_buf.value, password_buflen.value)
                     finally:
-                        lib_security.SecKeychainItemFreeContent(attrlist_ptr, password_buf)
+                        lib_security.SecKeychainItemFreeAttributesAndData(attrlist_ptr, password_buf)
 
             if not username or not password:
                 raise MissingCredentialsException()
