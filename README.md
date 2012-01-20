@@ -51,23 +51,23 @@ Use the `Gist` / `Add File To Gist` command to see a list of your Gists. Selecti
 
 ## Create Public Gist
 
-* Windows and Linux: Ctrl-K, Ctrl-I
-* OS X: Cmd-K, Cmd-I
+* Windows and Linux: `Ctrl+K` `Ctrl+I`
+* OS X: `Cmd+K` `Cmd+I`
 
 ## Create Private Gist
 
-* Windows and Linux: Ctrl-K, Ctrl-L
-* OS X: Cmd-K, Cmd-L
+* Windows and Linux: `Ctrl+K` `Ctrl+L`
+* OS X: `Cmd+K` `Cmd+L`
 
 ## Update File
 
-* Windows and Linux: Ctrl-K, Ctrl-S
-* OS X: Cmd-K, Cmd-S
+* Windows and Linux: `Ctrl+K` `Ctrl+S`
+* OS X: `Cmd+K` `Cmd+S`
 
 ## Open Gist
 
-* Windows and Linux: Ctrl-Shift-G
-* OS X: Ctrl-Cmd-G
+* Windows and Linux: `Ctrl+Shift+G`
+* OS X: `Ctrl+Cmd+G`
 
 # Information
 
