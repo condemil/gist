@@ -337,8 +337,8 @@ class GistCommand(sublime_plugin.TextCommand):
 
                 if gistify:
                     gistify_view(self.view, gist, gist['files'].keys()[0])
-                else:
-                    open_gist(gist['url'])
+                # else:
+                    # open_gist(gist['url'])
 
             window.show_input_panel('Gist File Name: (optional):', filename, on_gist_filename, None, None)
 
