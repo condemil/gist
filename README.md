@@ -1,26 +1,22 @@
-Gist
-====
+# Gist
 
-[Sublime Text 2](http://www.sublimetext.com/) plugin for creating new Gists from selected text and get the gist list
+A [Sublime Text 2](http://www.sublimetext.com/) plugin for creating and editing Gists.
 
-Installation
------------
+# Installation
 
-Go to your Packages subdirectory under Sublime Text 2 data directory:
+## Package Control
 
-* Windows: %APPDATA%\Sublime Text 2
-* OS X: ~/Library/Application Support/Sublime Text 2
-* Linux: ~/.config/sublime-text-2
-* Portable Installation: Sublime Text 2/Data
+Install [Package Control](http://wbond.net/sublime_packages/package_control). Gist will show up in the package list. This is the recommended installation method.
 
-Then clone this repository:
+## Manual installation
+
+Go to the "Packages" directory (`Preferences` / `Browse Packages…`). Then clone this repository:
 
     git clone git://github.com/condemil/Gist
 
-Options
--------
+# Options
 
-If you're using OS X and have a keychain entry for github.com, no configuration is needed. Otherwise, copy the `Gist.sublime-settings` file from Packages/Gist to Packages/User sub-directory and edit:
+If you're using OS X and have a keychain entry for github.com, no configuration is needed. Otherwise, edit the settings file (it should open automatically the first time you use a Gist command):
 
 *   `"username": ""`
 
@@ -35,54 +31,46 @@ If you're using OS X and have a keychain entry for github.com, no configuration 
     You can enter https proxy here
     Format: "http://user:pass@proxy:port"
 
-Usage
------
-**Create a public gist:**
+# Usage
 
-From menu items:
+All functionality of the plugin is available in the `Tools` / `Gist` menu and in the command pallette.
 
-* Main menu: Tools -> Gist -> "Create Public Gist"
-* Context menu: "Create Public Gist"
+## Creating Gists
 
-By command called "Gist (public): Create from Selected Text"
+Use the `Gist` / `Create Public Gist` or `Gist` / `Create Private Gist` commands. If you don't have anything selected, a Gist will be created with contents of current file, URL of that Gist will be copied to the clipboard and then the file will switch to Gist editing mode. If you have selected some text, a Gist will be created using only that text and then immediately opened for editing. In case of multiple selections, you'll get one Gist with multiple files.
 
-There is a key bindings:
+## Editing existing Gists
 
-* Windows and Linux: "ctrl+k", "ctrl+i"
-* OS X: "super+k", "super+i"
+Use the `Gist` / `Open Gist` command to see a list of your Gists. Selecting one will open the files from that Gist in new tabs. You can then edit the files normally and use `Gist` / `Update File` to update the Gist, or use other commands to change Gist description, remove or rename files, or delete the Gist.
 
-**Create a private gist:**
+## Adding new files to existing Gists
 
-From menu items:
+Use the `Gist` / `Add File To Gist` command to see a list of your Gists. Selecting one will add contents of current file as a new file to that Gist and switch the file to Gist editing mode.
 
-* Main menu: Tools -> Gist -> "Create Private Gist"
-* Context menu: "Create Private Gist"
+# Default key bindings:
 
-By command called "Gist (private): Create from Selected Text".
+## Create Public Gist
 
-There is a key bindings:
+* Windows and Linux: `Ctrl+K` `Ctrl+I`
+* OS X: `Cmd+K` `Cmd+I`
 
-* Windows and Linux: "ctrl+k", "ctrl+l"
-* OS X: "super+k", "super+l"
+## Create Private Gist
 
-**Get gist list:**
+* Windows and Linux: `Ctrl+K` `Ctrl+L`
+* OS X: `Cmd+K` `Cmd+L`
 
-From menu items:
+## Update File
 
-* Main menu: Tools -> Gist -> "Get Gist List"
+* Windows and Linux: `Ctrl+K` `Ctrl+S`
+* OS X: `Cmd+K` `Cmd+S`
 
-By command called "Gist: Get Gist List".
+## Open Gist
 
-There is a key bindings:
+* Windows and Linux: `Ctrl+Shift+G`
+* OS X: `Ctrl+Cmd+G`
 
-* Windows and Linux: "ctrl+shift+g"
-* OS X: "super+shift+g"
-
-**The content of the selected gist will be copied into the clipboard**
-
-Information
------------
+# Information
 
 Source: https://github.com/condemil/Gist
 
-Author: https://github.com/condemil/
+Authors: [Dmitry Budaev](https://github.com/condemil/), [Alexey Ermakov](https://github.com/technocoreai)
