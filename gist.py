@@ -36,6 +36,10 @@ def get_credentials():
         raise MissingCredentialsException()
     return (username, password)
 
+def basic_auth_string():
+    auth_string = u'%s:%s' % get_credentials()
+    return auth_string.encode('utf-8')
+
 if sublime.platform() == 'osx':
     # Keychain support
     # Instead of Gist.sublime-settings, fetch username and password from the user's github.com keychain entry
@@ -209,7 +213,7 @@ def api_request_native(url, data=None, method=None):
     request = urllib2.Request(url)
     if method:
         request.get_method = lambda: method
-    request.add_header('Authorization', 'Basic ' + base64.urlsafe_b64encode("%s:%s" % get_credentials()))
+    request.add_header('Authorization', 'Basic ' + base64.urlsafe_b64encode(basic_auth_string()))
     request.add_header('Accept', 'application/json')
     request.add_header('Content-Type', 'application/json')
 
@@ -244,9 +248,7 @@ def named_tempfile():
 def api_request_curl(url, data=None, method=None):
     command = ["curl", '-K', '-', url]
 
-    authorization_string = '-u "%s:%s"' % get_credentials()
-
-    config = [authorization_string,
+    config = ['-u ' + basic_auth_string(),
               '--header "Accept: application/json"',
               '--header "Content-Type: application/json"',
               "--silent"]
