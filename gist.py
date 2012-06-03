@@ -129,7 +129,7 @@ def catch_errors(fn):
             if not os.path.exists(user_settings_path):
                 default_settings_path = os.path.join(sublime.packages_path(), 'Gist', 'Gist.sublime-settings')
                 shutil.copy(default_settings_path, user_settings_path)
-            sublime.active_window().run_command("open_file", {"file": user_settings_path})
+            sublime.active_window().open_file(user_settings_path)
         except subprocess.CalledProcessError as err:
             sublime.error_message("Gist: Error while contacting GitHub: cURL returned %d" % err.returncode)
         except EnvironmentError as err:
