@@ -19,8 +19,7 @@ settings = sublime.load_settings('Gist.sublime-settings')
 GISTS_URL = 'https://api.github.com/gists'
 
 #Enterprise support:
-USE_ENTERPRISE = settings.get('enterprise')
-if USE_ENTERPRISE:
+if settings.get('enterprise'):
     GISTS_URL = settings.get('url')
     if not GISTS_URL:
         raise MissingCredentialsException()
