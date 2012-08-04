@@ -18,6 +18,13 @@ DEFAULT_USE_PROXY_VALUE = 'false'
 settings = sublime.load_settings('Gist.sublime-settings')
 GISTS_URL = 'https://api.github.com/gists'
 
+#Enterprise support:
+if settings.get('enterprise'):
+    GISTS_URL = settings.get('url')
+    if not GISTS_URL:
+        raise MissingCredentialsException()
+    GISTS_URL += '/api/v3/gists'
+
 class MissingCredentialsException(Exception):
     pass
 

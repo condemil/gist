@@ -7,5 +7,12 @@
 
 	// Proxy server
 	// Format: "http://user:pass@proxy:port"
-	"https_proxy": ""
+	"https_proxy": "",
+
+	// Enterprise support
+	"enterprise": false,
+	// Github URL
+	// Default: Leave empty if you want to use GitHub.com
+	// Example: https://github.domain.com
+	"url": ""
 }
