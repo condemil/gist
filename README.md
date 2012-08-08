@@ -39,6 +39,10 @@ If you're using OS X and have a keychain entry for github.com, no configuration 
 
 	Set the url of the enterprise version of github you want to use. Leave this blank if the enterprise option is set to false.
 
+*	`"max_gists": 100`
+
+	Set the maximum number of Gists that can will fetched by the plugin. It can't be higher than 100, because of GitHub API limitations.
+
 # Usage
 
 All functionality of the plugin is available in the `Tools` / `Gist` menu and in the command pallette.
