@@ -25,6 +25,10 @@ if settings.get('enterprise'):
         raise MissingCredentialsException()
     GISTS_URL += '/api/v3/gists'
 
+#Per page support (max 100)
+if settings.get('max_gists'):
+    GISTS_URL += '?per_page=%d' % settings.get('max_gists'); 
+
 class MissingCredentialsException(Exception):
     pass
 

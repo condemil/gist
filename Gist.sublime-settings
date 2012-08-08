@@ -14,5 +14,8 @@
 	// Github URL
 	// Default: Leave empty if you want to use GitHub.com
 	// Example: https://github.domain.com
-	"url": ""
+	"url": "",
+
+	// Max Gists to show (max 100 allowed by GitHub API)
+	"max_gists": 100
 }

@@ -31,6 +31,14 @@ If you're using OS X and have a keychain entry for github.com, no configuration 
     You can enter https proxy here
     Format: "http://user:pass@proxy:port"
 
+*	`"enterprise": false`
+
+	Set this to true if you want to use a enterprise version of github instead of github.com
+
+*	`"url": ""`
+
+	Set the url of the enterprise version of github you want to use. Leave this blank if the enterprise option is set to false.
+
 # Usage
 
 All functionality of the plugin is available in the `Tools` / `Gist` menu and in the command pallette.
