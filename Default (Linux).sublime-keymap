@@ -2,5 +2,6 @@
 	{ "keys": ["ctrl+k", "ctrl+i"], "command": "gist" },
 	{ "keys": ["ctrl+k", "ctrl+l"], "command": "gist_private" },
 	{ "keys": ["ctrl+k", "ctrl+s"], "command": "gist_update_file" },
-	{ "keys": ["ctrl+shift+g"], "command": "gist_list" }
+	{ "keys": ["ctrl+shift+g"], "command": "gist_list" },
+	{ "keys": ["ctrl+shift+alt+g"], "command": "insert_gist_list" }
 ]

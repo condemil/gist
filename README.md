@@ -81,6 +81,11 @@ Use the `Gist` / `Add File To Gist` command to see a list of your Gists. Selecti
 * Windows and Linux: `Ctrl+Shift+G`
 * OS X: `Ctrl+Cmd+G`
 
+## Insert Gist
+
+* Windows and Linux: "ctrl+shift+alt+g"
+* OS X: "ctrl+shift+super+g"
+
 # Information
 
 Source: https://github.com/condemil/Gist
