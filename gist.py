@@ -27,7 +27,7 @@ if settings.get('enterprise'):
 
 #Per page support (max 100)
 if settings.get('max_gists'):
-    if settings.get('max_gists') < 101
+    if settings.get('max_gists') < 101:
         GISTS_URL += '?per_page=%d' % settings.get('max_gists'); 
     else:
         sublime.error_message("Gist: GitHub API does not support a value of higher than 100")
