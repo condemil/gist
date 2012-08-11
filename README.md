@@ -31,6 +31,18 @@ If you're using OS X and have a keychain entry for github.com, no configuration 
     You can enter https proxy here
     Format: "http://user:pass@proxy:port"
 
+*	`"enterprise": false`
+
+	Set this to true if you want to use a enterprise version of github instead of github.com
+
+*	`"url": ""`
+
+	Set the url of the enterprise version of github you want to use. Leave this blank if the enterprise option is set to false.
+
+*	`"max_gists": 100`
+
+	Set the maximum number of Gists that can will fetched by the plugin. It can't be higher than 100, because of GitHub API limitations.
+
 # Usage
 
 All functionality of the plugin is available in the `Tools` / `Gist` menu and in the command pallette.
@@ -68,6 +80,11 @@ Use the `Gist` / `Add File To Gist` command to see a list of your Gists. Selecti
 
 * Windows and Linux: `Ctrl+Shift+G`
 * OS X: `Ctrl+Cmd+G`
+
+## Insert Gist
+
+* Windows and Linux: "ctrl+shift+alt+g"
+* OS X: "ctrl+shift+super+g"
 
 # Information
 

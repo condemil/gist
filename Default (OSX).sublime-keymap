@@ -2,5 +2,6 @@
 	{ "keys": ["super+k", "super+i"], "command": "gist" },
 	{ "keys": ["super+k", "super+l"], "command": "gist_private" },
 	{ "keys": ["super+k", "super+s"], "command": "gist_update_file" },
-	{ "keys": ["ctrl+super+g"], "command": "gist_list" }
+	{ "keys": ["ctrl+super+g"], "command": "gist_list" },
+	{ "keys": ["ctrl+shift+super+g"], "command": "insert_gist_list" }
 ]
