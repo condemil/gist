@@ -31,7 +31,7 @@ if settings.get('max_gists'):
         GISTS_URL += '?per_page=%d' % settings.get('max_gists'); 
     else:
         settings.set( "max_gists",100 )
-        sublime.error_message("Gist: GitHub API does not support a value of higher than 100")
+        sublime.status_message("Gist: GitHub API does not support a value of higher than 100")
 
 class MissingCredentialsException(Exception):
     pass
