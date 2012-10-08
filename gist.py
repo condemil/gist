@@ -217,10 +217,10 @@ def open_gist(gist_url):
         edit = view.begin_edit()
         view.insert(edit, 0, gist['files'][gist_filename]['content'])
         view.end_edit(edit)
+        if not language: continue        
         language = gist['files'][gist_filename]['language']        
         new_syntax = os.path.join(language,"{0}.tmLanguage".format(language))
         new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
-        print new_syntax_path
         if os.path.exists(new_syntax_path):
             view.set_syntax_file( new_syntax_path )
 
