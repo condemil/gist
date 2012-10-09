@@ -44,6 +44,9 @@ class SimpleHTTPError(Exception):
         self.code = code
         self.response = response
 
+class MissingTokenException(Exception):
+    pass
+
 def get_credentials():
     username = settings.get('username')
     password = settings.get('password')
@@ -53,6 +56,16 @@ def get_credentials():
 
 def basic_auth_string():
     auth_string = u'%s:%s' % get_credentials()
+    return auth_string.encode('utf-8')
+
+def get_token():
+    token = settings.get('token')
+    if not token:
+        raise MissingTokenException()
+    return token
+
+def token_auth_string():
+    auth_string = u'%s' % get_token()
     return auth_string.encode('utf-8')
 
 if sublime.platform() == 'osx':
@@ -246,7 +259,10 @@ def api_request_native(url, data=None, method=None):
     request = urllib2.Request(url)
     if method:
         request.get_method = lambda: method
-    request.add_header('Authorization', 'Basic ' + base64.urlsafe_b64encode(basic_auth_string()))
+    try:
+        request.add_header('Authorization', 'token ' + token_auth_string())
+    except MissingTokenException:
+        request.add_header('Authorization', 'Basic ' + base64.urlsafe_b64encode(basic_auth_string()))
     request.add_header('Accept', 'application/json')
     request.add_header('Content-Type', 'application/json')
 
@@ -329,7 +345,10 @@ class GistCommand(sublime_plugin.TextCommand):
 
     @catch_errors
     def run(self, edit):
-        get_credentials()
+        try:
+            get_token()
+        except MissingTokenException:
+            get_credentials()
         regions = [region for region in self.view.sel() if not region.empty()]
 
         if len(regions) == 0:
