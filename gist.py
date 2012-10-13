@@ -12,6 +12,7 @@ import tempfile
 import traceback
 import contextlib
 import shutil
+import re
 
 DEFAULT_CREATE_PUBLIC_VALUE = 'false'
 DEFAULT_USE_PROXY_VALUE = 'false'
@@ -488,6 +489,10 @@ class GistListCommandBase(object):
     def run(self, *args):
         gists = get_gists()
         gist_names = [gist_title(gist) for gist in gists]
+        if settings.get('gist_prefix'):
+            prefix_pattern = "^%s" % (settings.get('gist_prefix'))
+            gist_names = filter (lambda a: re.search(prefix_pattern, a), gist_names)
+        print gist_names
 
         def on_gist_num(num):
             if num != -1:
