@@ -16,15 +16,19 @@ Go to the "Packages" directory (`Preferences` / `Browse Packages…`). Then clon
 
 # Options
 
-If you're using OS X and have a keychain entry for github.com, no configuration is needed. Otherwise, edit the settings file (it should open automatically the first time you use a Gist command):
+If you're using OS X and have a keychain entry for github.com, no configuration is needed. Otherwise, edit the settings file (it should open automatically the first time you use a Gist command). Note you must specifiy either username AND password or token.
 
 *   `"username": ""`
 
-    You need to enter your GitHub username here
+    You can enter your GitHub username here
 
 *   `"password": ""`
 
-    You need to enter your GitHub password here
+    You can enter your GitHub password here
+
+*   `"token": ""`
+
+    You can enter your GitHub token here. To generate a token, see "Generating Access Tokens"
 
 *   `"https_proxy": http://user:pass@proxy:port`
 
@@ -85,6 +89,23 @@ Use the `Gist` / `Add File To Gist` command to see a list of your Gists. Selecti
 
 * Windows and Linux: "ctrl+shift+alt+g"
 * OS X: "ctrl+shift+super+g"
+
+# Generating Access Token
+Adapted from [here](https://github.com/bgreenlee/sublime-github#generating-your-own-access-token)
+Open up a Terminal window/shell (on OS X, Linux or Cygwin), and run:
+
+    curl -u username -d '{"scopes":["gist"]}' https://api.github.com/authorizations
+
+where `username` is your GitHub username. You'll be prompted for your password first. Then you'll get back
+a response that includes a 40-digit "token" value (e.g. `6423ba8429a152ff4a7279d1e8f4674029d3ef87`).
+Go to Sublime Text 2 -> Preferences -> Package Settings -> Gist -> Settings - User,
+and insert the token there. It should look like:
+
+    {
+        "token": "6423ba8429a152ff4a7279d1e8f4674029d3ef87"
+    }
+
+Restart Sublime.
 
 # Information
 
