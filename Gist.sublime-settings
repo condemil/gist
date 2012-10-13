@@ -17,5 +17,8 @@
 	"url": "",
 
 	// Max Gists to show (max 100 allowed by GitHub API)
-	"max_gists": 100
+	"max_gists": 100, 
+
+	// Limit to gists with specific prefix
+	"gist_prefix": "Snippet:"
 }
