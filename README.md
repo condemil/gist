@@ -43,6 +43,10 @@ If you're using OS X and have a keychain entry for github.com, no configuration 
 
 	Set the maximum number of Gists that can will fetched by the plugin. It can't be higher than 100, because of GitHub API limitations.
 
+* `"gist_prefix": ""`
+
+	Limit the Gists displayed in the `Open Gist` list by prefix. Leave blank to display all Gists. Example: `"gist_prefix": "Snippet:"` will only list Gists with names starting with the text **Snippet:**.
+
 # Usage
 
 All functionality of the plugin is available in the `Tools` / `Gist` menu and in the command pallette.
