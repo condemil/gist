@@ -1,7 +1,8 @@
 [
 	{ "keys": ["super+k", "super+i"], "command": "gist" },
-	{ "keys": ["super+k", "super+l"], "command": "gist_private" },
+	{ "keys": ["super+k", "super+p"], "command": "gist_private" },
 	{ "keys": ["super+k", "super+s"], "command": "gist_update_file" },
-	{ "keys": ["ctrl+super+g"], "command": "gist_list" },
-	{ "keys": ["ctrl+shift+super+g"], "command": "insert_gist_list" }
+	{ "keys": ["super+k", "super+o"], "command": "gist_list" },
+	{ "keys": ["super+k", "super+["], "command": "insert_gist_list" },
+	{ "keys": ["super+k", "super+]"], "command": "gist_add_file" }
 ]
