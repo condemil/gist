@@ -5,6 +5,14 @@
 	// Your password on GitHub
 	"password": "",
 
+	// Show GitHub organizations
+	"include_orgs": true,
+	// "include_orgs": ["company1", "company2"],
+	
+	// Show GitHub users
+	"include_users": false,
+	// "include_users": ["user1", "user2"],
+
 	// Proxy server
 	// Format: "http://user:pass@proxy:port"
 	"https_proxy": "",
