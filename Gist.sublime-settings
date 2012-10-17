@@ -5,6 +5,10 @@
 	// Your password on GitHub
 	"password": "",
 
+	// Your GitHub API token
+	// see: https://github.com/condemil/Gist#generating-access-token
+	"token": "",
+
 	// Show GitHub organizations
 	"include_orgs": true,
 	// "include_orgs": ["company1", "company2"],
