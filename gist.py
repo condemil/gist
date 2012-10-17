@@ -28,6 +28,9 @@ if settings.get('enterprise'):
 
 #Per page support (max 100)
 if settings.get('max_gists'):
+    if settings.get('use_starred'):
+        GISTS_URL += '/starred'
+
     if settings.get('max_gists') <= 100:
         GISTS_URL += '?per_page=%d' % settings.get('max_gists'); 
     else:
