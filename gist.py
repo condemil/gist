@@ -272,7 +272,12 @@ def get_user_gists(user):
     return api_request(USER_GISTS_URL % user)
 
 def gist_title(gist):
-    return gist.get('description') or gist.get('id')
+    title = gist.get('description') or gist.get('id')
+
+    if settings.get('show_authors'):
+        return [title, gist.get('user').get('login')]
+    else:
+        return title
 
 def api_request_native(url, data=None, method=None):
     request = urllib2.Request(url)

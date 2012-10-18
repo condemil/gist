@@ -17,6 +17,9 @@
 	"include_users": false,
 	// "include_users": ["user1", "user2"],
 
+	// Show the authors of Gists
+	"show_authors": false,
+
 	// Proxy server
 	// Format: "http://user:pass@proxy:port"
 	"https_proxy": "",
