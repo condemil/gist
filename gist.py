@@ -209,7 +209,7 @@ def update_gist(gist_url, file_changes, new_description=None):
     return result
 
 def gistify_view(view, gist, gist_filename):
-    statusline_string = "Gist: " + gist_title(gist)
+    statusline_string = "Gist: " + gist_title(gist)[0]
 
     if not view.file_name():
         view.set_name(gist_filename)
@@ -277,7 +277,7 @@ def gist_title(gist):
     if settings.get('show_authors'):
         return [title, gist.get('user').get('login')]
     else:
-        return title
+        return [title]
 
 def api_request_native(url, data=None, method=None):
     request = urllib2.Request(url)
