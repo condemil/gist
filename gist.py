@@ -279,6 +279,40 @@ def gist_title(gist):
     else:
         return [title]
 
+def gists_filter(all_gists):
+    prefix = settings.get('gist_prefix')
+    if prefix:
+        prefix_len = len(prefix)
+
+    if settings.get('gist_tag'):
+        tag_prog = re.compile('(^|\s)#' + re.escape(settings.get('gist_tag')) + '($|\s)')
+    else:
+        tag_prog = False
+
+    if not prefix and not tag_prog:
+        return [all_gists, [gist_title(gist) for gist in all_gists]]
+
+    gists = []
+    gists_names = []
+    for gist in all_gists:
+        name = gist_title(gist)
+
+        if prefix and name[0][0:prefix_len] == prefix:
+            name[0] = name[0][prefix_len:]
+
+            gists.append(gist)
+            gists_names.append(name)
+
+        elif tag_prog:
+            match = re.search(tag_prog, name[0])
+            if match:
+                name[0] = name[0][0:match.start()] + name[0][match.end():]
+
+                gists.append(gist)
+                gists_names.append(name)
+
+    return [gists, gists_names]
+
 def api_request_native(url, data=None, method=None):
     request = urllib2.Request(url)
     if method:
@@ -512,11 +546,9 @@ class GistListCommandBase(object):
 
     @catch_errors
     def run(self, *args):
-        self.gists = get_gists()
-        gist_names = [gist_title(gist) for gist in self.gists]
-        if settings.get('gist_prefix'):
-            prefix_pattern = "^%s" % (settings.get('gist_prefix'))
-            gist_names = filter (lambda a: re.search(prefix_pattern, a), gist_names)
+        filtered = gists_filter(get_gists())
+        self.gists = filtered[0]
+        gist_names = filtered[1]
 
         if settings.get('include_users'):
             self.users = list(settings.get('include_users'))
@@ -545,15 +577,17 @@ class GistListCommandBase(object):
                 for member in members:
                     self.gists += get_user_gists(member)
 
-                gist_names = [gist_title(gist) for gist in self.gists]
+                filtered = gists_filter(self.gists)
+                self.gists = filtered[0]
+                gist_names = filtered[1]
                 print gist_names
 
                 self.orgs = self.users = []
                 self.get_window().show_quick_panel(gist_names, on_gist_num)
             elif num < offUsers:
-                self.gists = get_user_gists(self.users[num - offOrgs])
-
-                gist_names = [gist_title(gist) for gist in self.gists]
+                filtered = gists_filter(get_user_gists(self.users[num - offOrgs]))
+                self.gists = filtered[0]
+                gist_names = filtered[1]
                 print gist_names
 
                 self.orgs = self.users = []

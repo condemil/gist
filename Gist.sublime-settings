@@ -38,5 +38,8 @@
 	"use_starred": false
 
 	// Limit to gists with specific prefix
-	//"gist_prefix": "Snippet:"
+	//"gist_prefix": "Snippet:",
+	
+	// Limit to gists with specific tag (#tag)
+	//"gist_tag": "snippet"
 }
