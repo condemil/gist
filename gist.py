@@ -298,7 +298,13 @@ def named_tempfile():
 def api_request_curl(url, data=None, method=None):
     command = ["curl", '-K', '-', url]
 
-    config = ['-u ' + basic_auth_string(),
+    try:
+        config = ['--header "Authorization: token ' + token_auth_string() +'"',
+              '--header "Accept: application/json"',
+              '--header "Content-Type: application/json"',
+              "--silent"]
+    except MissingTokenException:
+        config = ['-u ' + basic_auth_string(),
               '--header "Accept: application/json"',
               '--header "Content-Type: application/json"',
               "--silent"]
@@ -331,7 +337,7 @@ def api_request_curl(url, data=None, method=None):
 
                 if responsecode == 204: # No Content
                     return None
-                elif 200 <= responsecode < 300:
+                elif 200 <= responsecode < 300 or responsecode == 100: # Continue
                     return json.loads(response)
                 else:
                     raise SimpleHTTPError(responsecode, response)
