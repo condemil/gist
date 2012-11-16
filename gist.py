@@ -18,6 +18,9 @@ DEFAULT_CREATE_PUBLIC_VALUE = 'false'
 DEFAULT_USE_PROXY_VALUE = 'false'
 settings = sublime.load_settings('Gist.sublime-settings')
 GISTS_URL = 'https://api.github.com/gists'
+USER_GISTS_URL = 'https://api.github.com/users/%s/gists'
+ORGS_URL = 'https://api.github.com/user/orgs'
+ORG_MEMBERS_URL = 'https://api.github.com/orgs/%s/members'
 
 #Enterprise support:
 if settings.get('enterprise'):
@@ -28,8 +31,14 @@ if settings.get('enterprise'):
 
 #Per page support (max 100)
 if settings.get('max_gists'):
+    if settings.get('use_starred'):
+        GISTS_URL += '/starred'
+        USER_GISTS_URL += '/starred'
+
     if settings.get('max_gists') <= 100:
-        GISTS_URL += '?per_page=%d' % settings.get('max_gists'); 
+        MAX_GISTS = '?per_page=%d' % settings.get('max_gists')
+        GISTS_URL += MAX_GISTS
+        USER_GISTS_URL += MAX_GISTS
     else:
         settings.set( "max_gists",100 )
         sublime.status_message("Gist: GitHub API does not support a value of higher than 100")
@@ -200,7 +209,7 @@ def update_gist(gist_url, file_changes, new_description=None):
     return result
 
 def gistify_view(view, gist, gist_filename):
-    statusline_string = "Gist: " + gist_title(gist)
+    statusline_string = "Gist: " + gist_title(gist)[0]
 
     if not view.file_name():
         view.set_name(gist_filename)
@@ -253,8 +262,56 @@ def insert_gist(gist_url):
 def get_gists():
     return api_request(GISTS_URL)
 
+def get_orgs():
+    return api_request(ORGS_URL)
+
+def get_org_members(org):
+    return api_request(ORG_MEMBERS_URL % org)
+
+def get_user_gists(user):
+    return api_request(USER_GISTS_URL % user)
+
 def gist_title(gist):
-    return gist.get('description') or gist.get('id')
+    title = gist.get('description') or gist.get('id')
+
+    if settings.get('show_authors'):
+        return [title, gist.get('user').get('login')]
+    else:
+        return [title]
+
+def gists_filter(all_gists):
+    prefix = settings.get('gist_prefix')
+    if prefix:
+        prefix_len = len(prefix)
+
+    if settings.get('gist_tag'):
+        tag_prog = re.compile('(^|\s)#' + re.escape(settings.get('gist_tag')) + '($|\s)')
+    else:
+        tag_prog = False
+
+    if not prefix and not tag_prog:
+        return [all_gists, [gist_title(gist) for gist in all_gists]]
+
+    gists = []
+    gists_names = []
+    for gist in all_gists:
+        name = gist_title(gist)
+
+        if prefix and name[0][0:prefix_len] == prefix:
+            name[0] = name[0][prefix_len:]
+
+            gists.append(gist)
+            gists_names.append(name)
+
+        elif tag_prog:
+            match = re.search(tag_prog, name[0])
+            if match:
+                name[0] = name[0][0:match.start()] + name[0][match.end():]
+
+                gists.append(gist)
+                gists_names.append(name)
+
+    return [gists, gists_names]
 
 def api_request_native(url, data=None, method=None):
     request = urllib2.Request(url)
@@ -485,18 +542,58 @@ class GistPrivateCommand(GistCommand):
     public = False
 
 class GistListCommandBase(object):
+    gists = orgs = users = []
+
     @catch_errors
     def run(self, *args):
-        gists = get_gists()
-        gist_names = [gist_title(gist) for gist in gists]
-        if settings.get('gist_prefix'):
-            prefix_pattern = "^%s" % (settings.get('gist_prefix'))
-            gist_names = filter (lambda a: re.search(prefix_pattern, a), gist_names)
+        filtered = gists_filter(get_gists())
+        self.gists = filtered[0]
+        gist_names = filtered[1]
+
+        if settings.get('include_users'):
+            self.users = list(settings.get('include_users'))
+            gist_names = ["> " + user for user in self.users] + gist_names
+
+        if settings.get('include_orgs'):
+            if settings.get('include_orgs') == True:
+                self.orgs = [org.get("login") for org in get_orgs()]
+            else:
+                self.orgs = settings.get('include_orgs')
+
+            gist_names = ["> " + org for org in self.orgs] + gist_names
+
         print gist_names
 
         def on_gist_num(num):
-            if num != -1:
-                self.handle_gist(gists[num])
+            offOrgs = len(self.orgs)
+            offUsers = offOrgs + len(self.users)
+
+            if num < 0:
+                pass
+            elif num < offOrgs:
+                self.gists = []
+
+                members = [member.get("login") for member in get_org_members(self.orgs[num])]
+                for member in members:
+                    self.gists += get_user_gists(member)
+
+                filtered = gists_filter(self.gists)
+                self.gists = filtered[0]
+                gist_names = filtered[1]
+                print gist_names
+
+                self.orgs = self.users = []
+                self.get_window().show_quick_panel(gist_names, on_gist_num)
+            elif num < offUsers:
+                filtered = gists_filter(get_user_gists(self.users[num - offOrgs]))
+                self.gists = filtered[0]
+                gist_names = filtered[1]
+                print gist_names
+
+                self.orgs = self.users = []
+                self.get_window().show_quick_panel(gist_names, on_gist_num)
+            else:
+                self.handle_gist(self.gists[num - offUsers])
 
         self.get_window().show_quick_panel(gist_names, on_gist_num)
 
