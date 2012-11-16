@@ -5,6 +5,21 @@
 	// Your password on GitHub
 	"password": "",
 
+	// Your GitHub API token
+	// see: https://github.com/condemil/Gist#generating-access-token
+	"token": "",
+
+	// Show GitHub organizations
+	"include_orgs": true,
+	// "include_orgs": ["company1", "company2"],
+	
+	// Show GitHub users
+	"include_users": false,
+	// "include_users": ["user1", "user2"],
+
+	// Show the authors of Gists
+	"show_authors": false,
+
 	// Proxy server
 	// Format: "http://user:pass@proxy:port"
 	"https_proxy": "",
@@ -17,8 +32,14 @@
 	"url": "",
 
 	// Max Gists to show (max 100 allowed by GitHub API)
-	"max_gists": 100
+	"max_gists": 100,
+
+	// Only use starred gists
+	"use_starred": false
 
 	// Limit to gists with specific prefix
-	//"gist_prefix": "Snippet:"
+	//"gist_prefix": "Snippet:",
+	
+	// Limit to gists with specific tag (#tag)
+	//"gist_tag": "snippet"
 }
