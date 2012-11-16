@@ -26,30 +26,26 @@ If you're using OS X and have a keychain entry for github.com, no configuration 
 
     You can enter your GitHub password here
 
-*   `"token": ""`
-
-    You can enter your GitHub token here. To generate a token, see "Generating Access Tokens"
-
 *   `"https_proxy": http://user:pass@proxy:port`
 
     You can enter https proxy here
     Format: "http://user:pass@proxy:port"
 
-*	`"enterprise": false`
+*   `"enterprise": false`
 
-	Set this to true if you want to use a enterprise version of github instead of github.com
+    Set this to true if you want to use a enterprise version of github instead of github.com
 
-*	`"url": ""`
+*   `"url": ""`
 
-	Set the url of the enterprise version of github you want to use. Leave this blank if the enterprise option is set to false.
+    Set the url of the enterprise version of github you want to use. Leave this blank if the enterprise option is set to false.
 
-*	`"max_gists": 100`
+*   `"max_gists": 100`
 
-	Set the maximum number of Gists that can will fetched by the plugin. It can't be higher than 100, because of GitHub API limitations.
+    Set the maximum number of Gists that can will fetched by the plugin. It can't be higher than 100, because of GitHub API limitations.
 
 * `"gist_prefix": ""`
 
-	Limit the Gists displayed in the `Open Gist` list by prefix. Leave blank to display all Gists. Example: `"gist_prefix": "Snippet:"` will only list Gists with names starting with the text **Snippet:**.
+    Limit the Gists displayed in the `Open Gist` list by prefix. Leave blank to display all Gists. Example: `"gist_prefix": "Snippet:"` will only list Gists with names starting with the text **Snippet:**.
 
 # Usage
 
@@ -72,44 +68,32 @@ Use the `Gist` / `Add File To Gist` command to see a list of your Gists. Selecti
 ## Create Public Gist
 
 * Windows and Linux: `Ctrl+K` `Ctrl+I`
-* OS X: `Cmd+K` `Cmd+I`
+* OS X: `Super+K` `Super+I`
 
 ## Create Private Gist
 
-* Windows and Linux: `Ctrl+K` `Ctrl+L`
-* OS X: `Cmd+K` `Cmd+L`
+* Windows and Linux: `Ctrl+K` `Ctrl+P`
+* OS X: `Super+K` `Super+P`
 
 ## Update File
 
 * Windows and Linux: `Ctrl+K` `Ctrl+S`
-* OS X: `Cmd+K` `Cmd+S`
+* OS X: `Super+K` `Super+S`
 
 ## Open Gist
 
-* Windows and Linux: `Ctrl+Shift+G`
-* OS X: `Ctrl+Cmd+G`
+* Windows and Linux: `Ctrl+K` `Ctrl+O`
+* OS X: `Super+K` `Super+O`
 
 ## Insert Gist
 
-* Windows and Linux: "ctrl+shift+alt+g"
-* OS X: "ctrl+shift+super+g"
+* Windows and Linux: `Ctrl+K` `Ctrl+[`
+* OS X: `Super+K` `Super+[`
 
-# Generating Access Token
-Adapted from [here](https://github.com/bgreenlee/sublime-github#generating-your-own-access-token)
-Open up a Terminal window/shell (on OS X, Linux or Cygwin), and run:
+## Add File
 
-    curl -u username -d '{"scopes":["gist"]}' https://api.github.com/authorizations
-
-where `username` is your GitHub username. You'll be prompted for your password first. Then you'll get back
-a response that includes a 40-digit "token" value (e.g. `6423ba8429a152ff4a7279d1e8f4674029d3ef87`).
-Go to Sublime Text 2 -> Preferences -> Package Settings -> Gist -> Settings - User,
-and insert the token there. It should look like:
-
-    {
-        "token": "6423ba8429a152ff4a7279d1e8f4674029d3ef87"
-    }
-
-Restart Sublime.
+* Windows and Linux: `Ctrl+K` `Ctrl+]`
+* OS X: `Super+K` `Super+]`
 
 # Information
 
