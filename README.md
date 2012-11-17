@@ -14,6 +14,14 @@ Go to the "Packages" directory (`Preferences` / `Browse Packages…`). Then clon
 
     git clone git://github.com/condemil/Gist
 
+# Generating Access Token
+
+Currently, the only way to create a Gist Access Token is to curl the authorize API from Github. Here's the command you can run from your terminal to do so:
+
+    curl -v -u USERNAME -X POST https://api.github.com/authorizations --data "{\"scopes\":[\"gist\"]}"
+
+Where USERNAME is your Github username. Save the token generated and paste it in the settings section under the token option.
+
 # Options
 
 If you're using OS X and have a keychain entry for github.com, no configuration is needed. Otherwise, edit the settings file (it should open automatically the first time you use a Gist command). Note you must specifiy either username AND password or token.
