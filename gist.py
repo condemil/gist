@@ -240,9 +240,12 @@ def open_gist(gist_url):
         edit = view.begin_edit()
         view.insert(edit, 0, gist['files'][gist_filename]['content'])
         view.end_edit(edit)
-        if not "language" in locals(): continue
+        if not "language" in gist['files'][gist_filename] continue
         language = gist['files'][gist_filename]['language']        
-        new_syntax = os.path.join(language,"{0}.tmLanguage".format(language))
+        if language == 'C':
+            new_syntax = os.path.join('C++',"{0}.tmLanguage".format(language))
+        else
+            new_syntax = os.path.join(language,"{0}.tmLanguage".format(language))
         new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
         if os.path.exists(new_syntax_path):
             view.set_syntax_file( new_syntax_path )
