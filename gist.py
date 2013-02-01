@@ -232,6 +232,7 @@ def ungistify_view(view):
 def open_gist(gist_url):
     gist = api_request(gist_url)
     files = sorted(gist['files'].keys())
+
     for gist_filename in files:
         view = sublime.active_window().new_file()
 
@@ -240,15 +241,20 @@ def open_gist(gist_url):
         edit = view.begin_edit()
         view.insert(edit, 0, gist['files'][gist_filename]['content'])
         view.end_edit(edit)
-        if not "language" in gist['files'][gist_filename] continue
-        language = gist['files'][gist_filename]['language']        
+
+        if not "language" in gist['files'][gist_filename]: continue
+
+        language = gist['files'][gist_filename]['language']
+
         if language == 'C':
             new_syntax = os.path.join('C++',"{0}.tmLanguage".format(language))
         else
             new_syntax = os.path.join(language,"{0}.tmLanguage".format(language))
+
         new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
+
         if os.path.exists(new_syntax_path):
-            view.set_syntax_file( new_syntax_path )
+            view.set_syntax_file(new_syntax_path)
 
 def insert_gist(gist_url):
     gist = api_request(gist_url)
