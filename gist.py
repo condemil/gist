@@ -248,7 +248,7 @@ def open_gist(gist_url):
 
         if language == 'C':
             new_syntax = os.path.join('C++',"{0}.tmLanguage".format(language))
-        else
+        else:
             new_syntax = os.path.join(language,"{0}.tmLanguage".format(language))
 
         new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
