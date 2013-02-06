@@ -415,7 +415,7 @@ def api_request_curl(url, data=None, method=None):
                 else:
                     raise SimpleHTTPError(responsecode, response)
 
-api_request = api_request_native
+api_request = api_request_curl if ('ssl' not in sys.modules and os.name != 'nt') else api_request_native
 
 class GistCommand(sublime_plugin.TextCommand):
     public = True
