@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import sublime
 import sublime_plugin
 import os
@@ -13,6 +13,7 @@ import traceback
 import contextlib
 import shutil
 import re
+import codecs
 
 try:
     import urllib2 as urllib
@@ -70,8 +71,8 @@ def get_credentials():
     return (username, password)
 
 def basic_auth_string():
-    auth_string = u'%s:%s' % get_credentials()
-    return auth_string.encode('utf-8')
+    auth_string = '%s:%s' % get_credentials()
+    return auth_string
 
 def get_token():
     token = settings.get('token')
@@ -80,13 +81,13 @@ def get_token():
     return token
 
 def token_auth_string():
-    auth_string = u'%s' % get_token()
-    return auth_string.encode('utf-8')
+    auth_string = '%s' % get_token()
+    return auth_string
 
 if sublime.platform() == 'osx':
     # Keychain support
     # Instead of Gist.sublime-settings, fetch username and password from the user's github.com keychain entry
-    SERVER = 'github.com'
+    SERVER = b'github.com'
 
     def create_keychain_accessor():
         from ctypes import cdll, util, c_uint32, c_int, c_char_p, c_void_p, POINTER, pointer, byref, Structure, string_at
@@ -200,7 +201,7 @@ def catch_errors(fn):
     return _fn
 
 def create_gist(public, description, files):
-    file_data = dict((filename, {'content': text}) for filename, text in files.items())
+    file_data = dict((filename, {'content': text}) for filename, text in list(files.items()))
     data = json.dumps({'description': description, 'public': public, 'files': file_data})
     gist = api_request(GISTS_URL, data)
     return gist
@@ -243,9 +244,9 @@ def open_gist(gist_url):
 
         gistify_view(view, gist, gist_filename)
 
-        edit = view.begin_edit()
-        view.insert(edit, 0, gist['files'][gist_filename]['content'])
-        view.end_edit(edit)
+        view.run_command('append', {
+            'characters': gist['files'][gist_filename]['content'],
+            })
 
         if not "language" in gist['files'][gist_filename]: continue
 
@@ -268,12 +269,9 @@ def insert_gist(gist_url):
     files = sorted(gist['files'].keys())
     for gist_filename in files:
         view = sublime.active_window().active_view()
-        edit = view.begin_edit()
-        for region in view.sel():
-
-            view.replace(edit, region, gist['files'][gist_filename]['content'])
-
-        view.end_edit(edit)
+        view.run_command('insert', {
+            'characters': gist['files'][gist_filename]['content'],
+            })
 
 def get_gists():
     return api_request(GISTS_URL)
@@ -341,7 +339,7 @@ def api_request_native(url, data=None, method=None):
     request.add_header('Content-Type', 'application/json')
 
     if data is not None:
-        request.add_data(data)
+        request.add_data(bytes(data, 'ASCII'))
 
     if settings.get('https_proxy'):
         opener = urllib.build_opener(urllib.HTTPHandler(), urllib.HTTPSHandler(),
@@ -354,7 +352,8 @@ def api_request_native(url, data=None, method=None):
             if response.code == 204: # No Content
                 return None
             else:
-                return json.loads(response.read())
+                return json.loads(response.read().decode('ascii'))
+
     except urllib.HTTPError as err:
         with contextlib.closing(err):
             raise SimpleHTTPError(err.code, err.read())
@@ -411,7 +410,7 @@ def api_request_curl(url, data=None, method=None):
                 if responsecode == 204: # No Content
                     return None
                 elif 200 <= responsecode < 300 or responsecode == 100: # Continue
-                    return json.loads(response)
+                    return json.loads(response.decode('ascii'))
                 else:
                     raise SimpleHTTPError(responsecode, response)
 
@@ -470,7 +469,7 @@ class GistCommand(sublime_plugin.TextCommand):
                 sublime.status_message("%s Gist: %s" % (self.mode(), gist_html_url))
 
                 if gistify:
-                    gistify_view(self.view, gist, gist['files'].keys()[0])
+                    gistify_view(self.view, gist, list(gist['files'].keys())[0])
                 # else:
                     # open_gist(gist['url'])
 
