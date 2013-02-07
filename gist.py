@@ -72,7 +72,7 @@ def get_credentials():
 
 def basic_auth_string():
     auth_string = '%s:%s' % get_credentials()
-    return auth_string
+    return bytes(auth_string, 'ascii')
 
 def get_token():
     token = settings.get('token')
@@ -188,7 +188,7 @@ def catch_errors(fn):
         except SimpleHTTPError as err:
             msg = "Gist: GitHub returned error %d" % err.code
             try:
-                response_json = json.loads(err.response)
+                response_json = json.loads(err.response.decode('ascii'))
                 response_msg = response_json.get('message')
                 if response_msg:
                     msg += ": " + response_msg
@@ -334,7 +334,10 @@ def api_request_native(url, data=None, method=None):
     try:
         request.add_header('Authorization', 'token ' + token_auth_string())
     except MissingTokenException:
-        request.add_header('Authorization', 'Basic ' + base64.urlsafe_b64encode(basic_auth_string()))
+        request.add_header(
+            'Authorization',
+            'Basic ' + str(base64.urlsafe_b64encode(basic_auth_string())))
+
     request.add_header('Accept', 'application/json')
     request.add_header('Content-Type', 'application/json')
 
