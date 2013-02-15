@@ -567,11 +567,11 @@ class GistListCommandBase(object):
     def run(self, *args):
         filtered = gists_filter(get_gists(GISTS_URL))
         parted = GISTS_URL.partition('?')
-        STARRED_GISTS_URL = ''.join((parted[0]+STARRED, parted[1], parted[2]))
+        STARRED_GISTS_URL = ''.join((parted[0] + STARRED, parted[1], parted[2]))
         filtered_stars = gists_filter(get_gists(STARRED_GISTS_URL))
 
         self.gists = filtered[0] + filtered_stars[0]
-        gist_names = filtered[1] + filtered_stars[1]
+        gist_names = filtered[1] + map(lambda x: ["* "+x[0]], filtered_stars[1])
 
         if settings.get('include_users'):
             self.users = list(settings.get('include_users'))
