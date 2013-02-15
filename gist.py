@@ -24,6 +24,7 @@ DEFAULT_USE_PROXY_VALUE = 'false'
 settings = sublime.load_settings('Gist.sublime-settings')
 GISTS_URL = 'https://api.github.com/gists'
 USER_GISTS_URL = 'https://api.github.com/users/%s/gists'
+STARRED = '/starred'
 ORGS_URL = 'https://api.github.com/user/orgs'
 ORG_MEMBERS_URL = 'https://api.github.com/orgs/%s/members'
 
@@ -36,10 +37,6 @@ if settings.get('enterprise'):
 
 #Per page support (max 100)
 if settings.get('max_gists'):
-    if settings.get('use_starred'):
-        GISTS_URL += '/starred'
-        USER_GISTS_URL += '/starred'
-
     if settings.get('max_gists') <= 100:
         MAX_GISTS = '?per_page=%d' % settings.get('max_gists')
         GISTS_URL += MAX_GISTS
@@ -275,8 +272,8 @@ def insert_gist(gist_url):
 
         view.end_edit(edit)
 
-def get_gists():
-    return api_request(GISTS_URL)
+def get_gists(url):
+    return api_request(url)
 
 def get_orgs():
     return api_request(ORGS_URL)
@@ -568,9 +565,13 @@ class GistListCommandBase(object):
 
     @catch_errors
     def run(self, *args):
-        filtered = gists_filter(get_gists())
-        self.gists = filtered[0]
-        gist_names = filtered[1]
+        filtered = gists_filter(get_gists(GISTS_URL))
+        parted = GISTS_URL.partition('?')
+        STARRED_GISTS_URL = ''.join((parted[0]+STARRED, parted[1], parted[2]))
+        filtered_stars = gists_filter(get_gists(STARRED_GISTS_URL))
+
+        self.gists = filtered[0] + filtered_stars[0]
+        gist_names = filtered[1] + filtered_stars[1]
 
         if settings.get('include_users'):
             self.users = list(settings.get('include_users'))
