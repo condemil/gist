@@ -204,10 +204,13 @@ def create_gist(public, description, files):
 
 def update_gist(gist_url, file_changes, new_description=None):
     request = {'files': file_changes}
+    # print('Request:', request)
     if new_description is not None:
         request['description'] = new_description
     data = json.dumps(request)
+    # print('Data:', data)
     result = api_request(gist_url, data, method="PATCH")
+    # print('Result:', result)
     return result
 
 def gistify_view(view, gist, gist_filename):
@@ -233,6 +236,7 @@ def ungistify_view(view):
 
 def open_gist(gist_url):
     gist = api_request(gist_url)
+    # print('Gist:', gist)
     files = sorted(gist['files'].keys())
 
     for gist_filename in files:
@@ -328,6 +332,7 @@ def gists_filter(all_gists):
 
 def api_request_native(url, data=None, method=None):
     request = urllib.Request(url)
+    # print('API request url:', request.get_full_url())
     if method:
         request.get_method = lambda: method
     try:
@@ -340,6 +345,8 @@ def api_request_native(url, data=None, method=None):
     if data is not None:
         request.add_data(data)
 
+    # print('API request data:', request.get_data())
+    # print('API request header:', request.header_items())
     if settings.get('https_proxy'):
         opener = urllib.build_opener(urllib.HTTPHandler(), urllib.HTTPSHandler(),
                                      urllib.ProxyHandler({'https': settings.get('https_proxy')}))
@@ -585,7 +592,7 @@ class GistListCommandBase(object):
 
             gist_names = ["> " + org for org in self.orgs] + gist_names
 
-        print(gist_names)
+        # print(gist_names)
 
         def on_gist_num(num):
             offOrgs = len(self.orgs)
@@ -603,7 +610,7 @@ class GistListCommandBase(object):
                 filtered = gists_filter(self.gists)
                 self.gists = filtered[0]
                 gist_names = filtered[1]
-                print(gist_names)
+                # print(gist_names)
 
                 self.orgs = self.users = []
                 self.get_window().show_quick_panel(gist_names, on_gist_num)
@@ -611,7 +618,7 @@ class GistListCommandBase(object):
                 filtered = gists_filter(get_user_gists(self.users[num - offOrgs]))
                 self.gists = filtered[0]
                 gist_names = filtered[1]
-                print(gist_names)
+                # print(gist_names)
 
                 self.orgs = self.users = []
                 self.get_window().show_quick_panel(gist_names, on_gist_num)
