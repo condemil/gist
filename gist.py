@@ -16,7 +16,7 @@ import re
 
 try:
     import urllib2 as urllib
-except ImportError: # Python 3
+except ImportError:  # Python 3
     import urllib.request as urllib
 
 DEFAULT_CREATE_PUBLIC_VALUE = 'false'
@@ -42,22 +42,27 @@ if settings.get('max_gists'):
         GISTS_URL += MAX_GISTS
         USER_GISTS_URL += MAX_GISTS
     else:
-        settings.set( "max_gists",100 )
+        settings.set("max_gists", 100)
         sublime.status_message("Gist: GitHub API does not support a value of higher than 100")
+
 
 class MissingCredentialsException(Exception):
     pass
 
+
 class CurlNotFoundException(Exception):
     pass
+
 
 class SimpleHTTPError(Exception):
     def __init__(self, code, response):
         self.code = code
         self.response = response
 
+
 class MissingTokenException(Exception):
     pass
+
 
 def get_credentials():
     username = settings.get('username')
@@ -66,15 +71,18 @@ def get_credentials():
         raise MissingCredentialsException()
     return (username, password)
 
+
 def basic_auth_string():
     auth_string = u'%s:%s' % get_credentials()
     return auth_string.encode('utf-8')
+
 
 def get_token():
     token = settings.get('token')
     if not token:
         raise MissingTokenException()
     return token
+
 
 def token_auth_string():
     auth_string = u'%s' % get_token()
@@ -111,35 +119,35 @@ if sublime.platform() == 'osx':
             item = c_void_p()
 
             error = lib_security.SecKeychainFindInternetPassword(
-               None, # keychain, NULL = default
-               c_uint32(len(SERVER)), # server name length
+               None,  # keychain, NULL = default
+               c_uint32(len(SERVER)),  # server name length
                c_char_p(SERVER),      # server name
-               c_uint32(0), # security domain - unused
+               c_uint32(0),  # security domain - unused
                None,        # security domain - unused
-               c_uint32(0 if not username else len(username)), # account name length
+               c_uint32(0 if not username else len(username)),  # account name length
                None if not username else c_char_p(username),   # account name
-               c_uint32(0), # path name length - unused
-               None,        # path name
-               c_uint32(0), # port, 0 = any
-               c_int(0), # kSecProtocolTypeAny
-               c_int(0), # kSecAuthenticationTypeAny
-               None, # returned password length - unused
-               None, # returned password data - unused
-               byref(item)) # returned keychain item reference
+               c_uint32(0),  # path name length - unused
+               None,         # path name
+               c_uint32(0),  # port, 0 = any
+               c_int(0),  # kSecProtocolTypeAny
+               c_int(0),  # kSecAuthenticationTypeAny
+               None,  # returned password length - unused
+               None,  # returned password data - unused
+               byref(item))  # returned keychain item reference
             if not error:
                 info = SecKeychainAttributeInfo(
-                    1, # attribute count
-                    pointer(c_uint32(1633903476)), # kSecAccountItemAttr
-                    pointer(c_uint32(6))) # CSSM_DB_ATTRIBUTE_FORMAT_BLOB
+                    1,  # attribute count
+                    pointer(c_uint32(1633903476)),  # kSecAccountItemAttr
+                    pointer(c_uint32(6)))  # CSSM_DB_ATTRIBUTE_FORMAT_BLOB
 
                 attrlist_ptr = PtrSecKeychainAttributeList()
                 error = lib_security.SecKeychainItemCopyAttributesAndData(
-                    item, # keychain item reference
-                    byref(info), # list of attributes to retrieve
-                    None, # returned item class - unused
-                    byref(attrlist_ptr), # returned attribute data
-                    byref(password_buflen), # returned password length
-                    byref(password_buf)) # returned password data
+                    item,  # keychain item reference
+                    byref(info),  # list of attributes to retrieve
+                    None,  # returned item class - unused
+                    byref(attrlist_ptr),  # returned attribute data
+                    byref(password_buflen),  # returned password length
+                    byref(password_buf))  # returned password data
 
                 if not error:
                     try:
@@ -157,6 +165,7 @@ if sublime.platform() == 'osx':
 
         return keychain_get_credentials
     get_credentials = create_keychain_accessor()
+
 
 def catch_errors(fn):
     @functools.wraps(fn)
@@ -196,11 +205,13 @@ def catch_errors(fn):
             sublime.error_message("Gist: unknown error (please, report a bug!)")
     return _fn
 
+
 def create_gist(public, description, files):
     file_data = dict((filename, {'content': text}) for filename, text in files.items())
     data = json.dumps({'description': description, 'public': public, 'files': file_data})
     gist = api_request(GISTS_URL, data)
     return gist
+
 
 def update_gist(gist_url, file_changes, new_description=None):
     request = {'files': file_changes}
@@ -212,6 +223,7 @@ def update_gist(gist_url, file_changes, new_description=None):
     result = api_request(gist_url, data, method="PATCH")
     # print('Result:', result)
     return result
+
 
 def gistify_view(view, gist, gist_filename):
     statusline_string = "Gist: " + gist_title(gist)[0]
@@ -227,12 +239,14 @@ def gistify_view(view, gist, gist_filename):
     view.settings().set('gist_filename', gist_filename)
     view.set_status("Gist", statusline_string)
 
+
 def ungistify_view(view):
     view.settings().erase('gist_html_url')
     view.settings().erase('gist_description')
     view.settings().erase('gist_url')
     view.settings().erase('gist_filename')
     view.erase_status("Gist")
+
 
 def open_gist(gist_url):
     gist = api_request(gist_url)
@@ -248,21 +262,24 @@ def open_gist(gist_url):
         view.insert(edit, 0, gist['files'][gist_filename]['content'])
         view.end_edit(edit)
 
-        if not "language" in gist['files'][gist_filename]: continue
+        if not "language" in gist['files'][gist_filename]:
+            continue
 
         language = gist['files'][gist_filename]['language']
 
-        if language is None: continue
+        if language is None:
+            continue
 
         if language == 'C':
-            new_syntax = os.path.join('C++',"{0}.tmLanguage".format(language))
+            new_syntax = os.path.join('C++', "{0}.tmLanguage".format(language))
         else:
-            new_syntax = os.path.join(language,"{0}.tmLanguage".format(language))
+            new_syntax = os.path.join(language, "{0}.tmLanguage".format(language))
 
         new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
 
         if os.path.exists(new_syntax_path):
             view.set_syntax_file(new_syntax_path)
+
 
 def insert_gist(gist_url):
     gist = api_request(gist_url)
@@ -276,17 +293,22 @@ def insert_gist(gist_url):
 
         view.end_edit(edit)
 
+
 def get_gists(url):
     return api_request(url)
+
 
 def get_orgs():
     return api_request(ORGS_URL)
 
+
 def get_org_members(org):
     return api_request(ORG_MEMBERS_URL % org)
 
+
 def get_user_gists(user):
     return api_request(USER_GISTS_URL % user)
+
 
 def gist_title(gist):
     title = gist.get('description') or gist.get('id')
@@ -295,6 +317,7 @@ def gist_title(gist):
         return [title, gist.get('user').get('login')]
     else:
         return [title]
+
 
 def gists_filter(all_gists):
     prefix = settings.get('gist_prefix')
@@ -330,6 +353,7 @@ def gists_filter(all_gists):
 
     return [gists, gists_names]
 
+
 def api_request_native(url, data=None, method=None):
     request = urllib.Request(url)
     # print('API request url:', request.get_full_url())
@@ -355,13 +379,14 @@ def api_request_native(url, data=None, method=None):
 
     try:
         with contextlib.closing(urllib.urlopen(request)) as response:
-            if response.code == 204: # No Content
+            if response.code == 204:  # No Content
                 return None
             else:
                 return json.loads(response.read())
     except urllib.HTTPError as err:
         with contextlib.closing(err):
             raise SimpleHTTPError(err.code, err.read())
+
 
 @contextlib.contextmanager
 def named_tempfile():
@@ -372,11 +397,12 @@ def named_tempfile():
         tmpfile.close()
         os.unlink(tmpfile.name)
 
+
 def api_request_curl(url, data=None, method=None):
     command = ["curl", '-K', '-', url]
 
     try:
-        config = ['--header "Authorization: token ' + token_auth_string() +'"',
+        config = ['--header "Authorization: token ' + token_auth_string() + '"',
               '--header "Accept: application/json"',
               '--header "Content-Type: application/json"',
               "--silent"]
@@ -412,14 +438,15 @@ def api_request_curl(url, data=None, method=None):
                 _, responsecode, message = headers.readline().split(None, 2)
                 responsecode = int(responsecode)
 
-                if responsecode == 204: # No Content
+                if responsecode == 204:  # No Content
                     return None
-                elif 200 <= responsecode < 300 or responsecode == 100: # Continue
+                elif 200 <= responsecode < 300 or responsecode == 100:  # Continue
                     return json.loads(response)
                 else:
                     raise SimpleHTTPError(responsecode, response)
 
 api_request = api_request_curl if ('ssl' not in sys.modules and os.name != 'nt') else api_request_native
+
 
 class GistCommand(sublime_plugin.TextCommand):
     public = True
@@ -482,6 +509,7 @@ class GistCommand(sublime_plugin.TextCommand):
 
         window.show_input_panel("Gist Description (optional):", '', on_gist_description, None, None)
 
+
 class GistViewCommand(object):
     """A base class for commands operating on a gistified view"""
     def is_enabled(self):
@@ -499,13 +527,16 @@ class GistViewCommand(object):
     def gist_description(self):
         return self.view.settings().get("gist_description")
 
+
 class GistCopyUrl(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
         sublime.set_clipboard(self.gist_html_url())
 
+
 class GistOpenBrowser(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
         webbrowser.open(self.gist_html_url())
+
 
 class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
@@ -522,6 +553,7 @@ class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
 
         self.view.window().show_input_panel('New File Name:', old_filename, on_filename, None, None)
 
+
 class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
         @catch_errors
@@ -537,6 +569,7 @@ class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
 
         self.view.window().show_input_panel('New Description:', self.gist_description() or '', on_gist_description, None, None)
 
+
 class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
@@ -545,6 +578,7 @@ class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
         update_gist(self.gist_url(), changes)
         sublime.status_message("Gist updated")
 
+
 class GistDeleteFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
@@ -552,6 +586,7 @@ class GistDeleteFileCommand(GistViewCommand, sublime_plugin.TextCommand):
         update_gist(self.gist_url(), changes)
         ungistify_view(self.view)
         sublime.status_message("Gist file deleted")
+
 
 class GistDeleteCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
@@ -564,8 +599,10 @@ class GistDeleteCommand(GistViewCommand, sublime_plugin.TextCommand):
                     ungistify_view(view)
         sublime.status_message("Gist deleted")
 
+
 class GistPrivateCommand(GistCommand):
     public = False
+
 
 class GistListCommandBase(object):
     gists = orgs = users = []
@@ -578,7 +615,7 @@ class GistListCommandBase(object):
         filtered_stars = gists_filter(get_gists(STARRED_GISTS_URL))
 
         self.gists = filtered[0] + filtered_stars[0]
-        gist_names = filtered[1] + map(lambda x: ["* "+x[0]], filtered_stars[1])
+        gist_names = filtered[1] + map(lambda x: ["* " + x[0]], filtered_stars[1])
 
         if settings.get('include_users'):
             self.users = list(settings.get('include_users'))
@@ -627,6 +664,7 @@ class GistListCommandBase(object):
 
         self.get_window().show_quick_panel(gist_names, on_gist_num)
 
+
 class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
     @catch_errors
     def handle_gist(self, gist):
@@ -635,6 +673,7 @@ class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
     def get_window(self):
         return self.window
 
+
 class InsertGistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
     @catch_errors
     def handle_gist(self, gist):
@@ -642,6 +681,7 @@ class InsertGistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
 
     def get_window(self):
         return self.window
+
 
 class GistAddFileCommand(GistListCommandBase, sublime_plugin.TextCommand):
     def is_enabled(self):
