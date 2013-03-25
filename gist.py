@@ -20,34 +20,62 @@ try:
 except ImportError: # Python 3
     import urllib.request as urllib
 
-DEFAULT_CREATE_PUBLIC_VALUE = 'false'
-DEFAULT_USE_PROXY_VALUE = 'false'
-settings = sublime.load_settings('Gist.sublime-settings')
-GISTS_URL = 'https://api.github.com/gists'
-USER_GISTS_URL = 'https://api.github.com/users/%s/gists'
-ORGS_URL = 'https://api.github.com/user/orgs'
-ORG_MEMBERS_URL = 'https://api.github.com/orgs/%s/members'
 
-#Enterprise support:
-if settings.get('enterprise'):
-    GISTS_URL = settings.get('url')
-    if not GISTS_URL:
-        raise MissingCredentialsException()
-    GISTS_URL += '/api/v3/gists'
+global settings
+global DEFAULT_CREATE_PUBLIC_VALUE
+global DEFAULT_USE_PROXY_VALUE
+global GISTS_URL
+global USER_GISTS_URL
+global ORGS_URL
+global ORG_MEMBERS_URL
 
-#Per page support (max 100)
-if settings.get('max_gists'):
-    if settings.get('use_starred'):
-        GISTS_URL += '/starred'
-        USER_GISTS_URL += '/starred'
 
-    if settings.get('max_gists') <= 100:
-        MAX_GISTS = '?per_page=%d' % settings.get('max_gists')
-        GISTS_URL += MAX_GISTS
-        USER_GISTS_URL += MAX_GISTS
-    else:
-        settings.set( "max_gists",100 )
-        sublime.status_message("Gist: GitHub API does not support a value of higher than 100")
+def initialize_globals():
+    '''
+    Initialize globals. In Sublime Text 3 this can no longer me done in
+    the module scope.
+
+    See "Restricted API Usage at Startup" in the following document.
+    http://www.sublimetext.com/docs/3/porting_guide.html
+    '''
+    global settings
+    global DEFAULT_CREATE_PUBLIC_VALUE
+    global DEFAULT_USE_PROXY_VALUE
+    global GISTS_URL
+    global USER_GISTS_URL
+    global ORGS_URL
+    global ORG_MEMBERS_URL
+
+    settings = sublime.load_settings('Gist.sublime-settings')
+    DEFAULT_CREATE_PUBLIC_VALUE = 'false'
+    DEFAULT_USE_PROXY_VALUE = 'false'
+    GISTS_URL = 'https://api.github.com/gists'
+    USER_GISTS_URL = 'https://api.github.com/users/%s/gists'
+    ORGS_URL = 'https://api.github.com/user/orgs'
+    ORG_MEMBERS_URL = 'https://api.github.com/orgs/%s/members'
+
+    #Enterprise support:
+    if settings.get('enterprise'):
+        GISTS_URL = settings.get('url')
+        if not GISTS_URL:
+            raise MissingCredentialsException()
+        GISTS_URL += '/api/v3/gists'
+
+    #Per page support (max 100)
+    if settings.get('max_gists'):
+        if settings.get('use_starred'):
+            GISTS_URL += '/starred'
+            USER_GISTS_URL += '/starred'
+
+        if settings.get('max_gists') <= 100:
+            MAX_GISTS = '?per_page=%d' % settings.get('max_gists')
+            GISTS_URL += MAX_GISTS
+            USER_GISTS_URL += MAX_GISTS
+        else:
+            settings.set('max_gists', 100)
+            sublime.status_message(
+                "Gist: GitHub API does not support a value of higher than 100")
+
 
 class MissingCredentialsException(Exception):
     pass
@@ -427,6 +455,8 @@ class GistCommand(sublime_plugin.TextCommand):
 
     @catch_errors
     def run(self, edit):
+        initialize_globals()
+
         try:
             get_token()
         except MissingTokenException:
@@ -485,6 +515,9 @@ class GistViewCommand(object):
     def is_enabled(self):
         return self.gist_url() is not None
 
+    def run(self, edit):
+        initialize_globals()
+
     def gist_url(self):
         return self.view.settings().get("gist_url")
 
@@ -499,14 +532,18 @@ class GistViewCommand(object):
 
 class GistCopyUrl(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
+        GistViewCommand.run(self, edit)
         sublime.set_clipboard(self.gist_html_url())
 
 class GistOpenBrowser(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
+        GistViewCommand.run(self, edit)
         webbrowser.open(self.gist_html_url())
 
 class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
+        GistViewCommand.run(self, edit)
+
         old_filename = self.gist_filename()
 
         @catch_errors
@@ -522,6 +559,8 @@ class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
 
 class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
+        GistViewCommand.run(self, edit)
+
         @catch_errors
         def on_gist_description(description):
             if description and description != self.gist_description():
@@ -538,6 +577,8 @@ class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
 class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
+        GistViewCommand.run(self, edit)
+
         text = self.view.substr(sublime.Region(0, self.view.size()))
         changes = {self.gist_filename(): {'content': text}}
         update_gist(self.gist_url(), changes)
@@ -546,6 +587,8 @@ class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
 class GistDeleteFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
+        GistViewCommand.run(self, edit)
+
         changes = {self.gist_filename(): None}
         update_gist(self.gist_url(), changes)
         ungistify_view(self.view)
@@ -554,6 +597,8 @@ class GistDeleteFileCommand(GistViewCommand, sublime_plugin.TextCommand):
 class GistDeleteCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
+        GistViewCommand.run(self, edit)
+
         gist_url = self.gist_url()
         api_request(gist_url, method='DELETE')
         for window in sublime.windows():
@@ -570,6 +615,8 @@ class GistListCommandBase(object):
 
     @catch_errors
     def run(self, *args):
+        initialize_globals()
+
         filtered = gists_filter(get_gists())
         self.gists = filtered[0]
         gist_names = filtered[1]
