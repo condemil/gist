@@ -288,7 +288,9 @@ def get_user_gists(user):
     return api_request(USER_GISTS_URL % user)
 
 def gist_title(gist):
-    title = gist.get('description') or gist.get('id')
+    files = gist.get('files')
+    file_name = list(files)
+    title = file_name[0] or gist.get('id')
 
     if settings.get('show_authors'):
         return [title, gist.get('user').get('login')]
