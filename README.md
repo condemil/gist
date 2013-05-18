@@ -16,7 +16,19 @@ Go to the "Packages" directory (`Preferences` / `Browse Packages…`). Then clon
 
 # Generating Access Token
 
-Currently, the only way to create a Gist Access Token is to curl the authorize API from Github. Here's the command you can run from your terminal to do so:
+As of [2013-05-16](https://github.com/blog/1509-personal-api-tokens), you can generate API Access Tokens via the Web UI or via the GitHub API
+
+## Web
+* Account Settings
+* Applications
+* "Create New Token" under "Personal API Access Tokens"
+* You might want to give the Token a useful name, Ex: sublime gist
+
+Paste the token in the settings section under the token option.
+
+## API
+
+Here's a command you can run from your terminal to generate a token via curl:
 
     curl -v -u USERNAME -X POST https://api.github.com/authorizations --data "{\"scopes\":[\"gist\"]}"
 
