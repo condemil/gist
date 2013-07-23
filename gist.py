@@ -312,7 +312,8 @@ def get_user_gists(user):
 
 def gist_title(gist):
     file_name = sorted(gist['files'].keys())
-    title = file_name[0] or gist.get('id')
+    description = gist.get('description')
+    title = description or file_name[0] or gist.get('id')
 
     if settings.get('show_authors'):
         return [title, gist.get('user').get('login')]
