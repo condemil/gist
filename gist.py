@@ -665,7 +665,7 @@ class GistListCommandBase(object):
         filtered_stars = gists_filter(get_gists(STARRED_GISTS_URL))
 
         self.gists = filtered[0] + filtered_stars[0]
-        gist_names = filtered[1] + map(lambda x: ["* " + x[0]], filtered_stars[1])
+        gist_names = filtered[1] + list(map(lambda x: ["* " + x[0]], filtered_stars[1]))
 
         if settings.get('include_users'):
             self.users = list(settings.get('include_users'))
