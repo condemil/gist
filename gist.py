@@ -15,11 +15,12 @@ import shutil
 import re
 import codecs
 
-try:
-    import urllib2 as urllib
-except ImportError:  # Python 3
-    import urllib.request as urllib
+PY3 = sys.version > '3'
 
+if PY3:
+    import urllib.request as urllib
+else:
+    import urllib2 as urllib
 
 global settings
 global DEFAULT_CREATE_PUBLIC_VALUE
@@ -287,9 +288,14 @@ def open_gist(gist_url):
 
         gistify_view(view, gist, gist_filename)
 
-        view.run_command('append', {
-            'characters': gist['files'][gist_filename]['content'],
-            })
+        if PY3:
+            view.run_command('append', {
+                'characters': gist['files'][gist_filename]['content'],
+                })
+        else:
+            edit = view.begin_edit()
+            view.insert(edit, 0, gist['files'][gist_filename]['content'])
+            view.end_edit(edit)
 
         if not "language" in gist['files'][gist_filename]:
             continue
@@ -313,11 +319,21 @@ def open_gist(gist_url):
 def insert_gist(gist_url):
     gist = api_request(gist_url)
     files = sorted(gist['files'].keys())
+
     for gist_filename in files:
         view = sublime.active_window().active_view()
-        view.run_command('insert', {
-            'characters': gist['files'][gist_filename]['content'],
-            })
+
+        if PY3:
+            view.run_command('insert', {
+                'characters': gist['files'][gist_filename]['content'],
+                })
+        else:
+            edit = view.begin_edit()
+
+            for region in view.sel():
+                view.replace(edit, region, gist['files'][gist_filename]['content'])
+
+            view.end_edit(edit)
 
 
 def get_gists(url):
