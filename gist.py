@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import sublime
 import sublime_plugin
 import os
@@ -13,37 +13,67 @@ import traceback
 import contextlib
 import shutil
 import re
+import codecs
 
-try:
-    import urllib2 as urllib
-except ImportError:  # Python 3
+PY3 = sys.version > '3'
+
+if PY3:
     import urllib.request as urllib
+else:
+    import urllib2 as urllib
 
-DEFAULT_CREATE_PUBLIC_VALUE = 'false'
-DEFAULT_USE_PROXY_VALUE = 'false'
-settings = sublime.load_settings('Gist.sublime-settings')
-GISTS_URL = 'https://api.github.com/gists'
-USER_GISTS_URL = 'https://api.github.com/users/%s/gists'
-STARRED = '/starred'
-ORGS_URL = 'https://api.github.com/user/orgs'
-ORG_MEMBERS_URL = 'https://api.github.com/orgs/%s/members'
+global settings
+global DEFAULT_CREATE_PUBLIC_VALUE
+global DEFAULT_USE_PROXY_VALUE
+global GISTS_URL
+global USER_GISTS_URL
+global ORGS_URL
+global ORG_MEMBERS_URL
+global STARRED
 
-#Enterprise support:
-if settings.get('enterprise'):
-    GISTS_URL = settings.get('url')
-    if not GISTS_URL:
-        raise MissingCredentialsException()
-    GISTS_URL += '/api/v3/gists'
 
-#Per page support (max 100)
-if settings.get('max_gists'):
-    if settings.get('max_gists') <= 100:
-        MAX_GISTS = '?per_page=%d' % settings.get('max_gists')
-        GISTS_URL += MAX_GISTS
-        USER_GISTS_URL += MAX_GISTS
-    else:
-        settings.set("max_gists", 100)
-        sublime.status_message("Gist: GitHub API does not support a value of higher than 100")
+def initialize_globals():
+    '''
+    Initialize globals. In Sublime Text 3 this can no longer me done in
+    the module scope.
+
+    See "Restricted API Usage at Startup" in the following document.
+    http://www.sublimetext.com/docs/3/porting_guide.html
+    '''
+    global settings
+    global DEFAULT_CREATE_PUBLIC_VALUE
+    global DEFAULT_USE_PROXY_VALUE
+    global GISTS_URL
+    global USER_GISTS_URL
+    global ORGS_URL
+    global ORG_MEMBERS_URL
+    global STARRED
+
+    settings = sublime.load_settings('Gist.sublime-settings')
+    DEFAULT_CREATE_PUBLIC_VALUE = 'false'
+    DEFAULT_USE_PROXY_VALUE = 'false'
+    GISTS_URL = 'https://api.github.com/gists'
+    USER_GISTS_URL = 'https://api.github.com/users/%s/gists'
+    ORGS_URL = 'https://api.github.com/user/orgs'
+    ORG_MEMBERS_URL = 'https://api.github.com/orgs/%s/members'
+    STARRED = '/starred'
+
+    #Enterprise support:
+    if settings.get('enterprise'):
+        GISTS_URL = settings.get('url')
+        if not GISTS_URL:
+            raise MissingCredentialsException()
+        GISTS_URL += '/api/v3/gists'
+
+    #Per page support (max 100)
+    if settings.get('max_gists'):
+        if settings.get('max_gists') <= 100:
+            MAX_GISTS = '?per_page=%d' % settings.get('max_gists')
+            GISTS_URL += MAX_GISTS
+            USER_GISTS_URL += MAX_GISTS
+        else:
+            settings.set('max_gists', 100)
+            sublime.status_message("Gist: GitHub API does not support a value of higher than 100")
 
 
 class MissingCredentialsException(Exception):
@@ -73,8 +103,8 @@ def get_credentials():
 
 
 def basic_auth_string():
-    auth_string = u'%s:%s' % get_credentials()
-    return auth_string.encode('utf-8')
+    auth_string = '%s:%s' % get_credentials()
+    return bytes(auth_string, 'ascii')
 
 
 def get_token():
@@ -85,13 +115,13 @@ def get_token():
 
 
 def token_auth_string():
-    auth_string = u'%s' % get_token()
-    return auth_string.encode('utf-8')
+    auth_string = '%s' % get_token()
+    return auth_string
 
 if sublime.platform() == 'osx':
     # Keychain support
     # Instead of Gist.sublime-settings, fetch username and password from the user's github.com keychain entry
-    SERVER = 'github.com'
+    SERVER = b'github.com'
 
     def create_keychain_accessor():
         from ctypes import cdll, util, c_uint32, c_int, c_char_p, c_void_p, POINTER, pointer, byref, Structure, string_at
@@ -193,7 +223,7 @@ def catch_errors(fn):
         except SimpleHTTPError as err:
             msg = "Gist: GitHub returned error %d" % err.code
             try:
-                response_json = json.loads(err.response)
+                response_json = json.loads(err.response.decode('ascii'))
                 response_msg = response_json.get('message')
                 if response_msg:
                     msg += ": " + response_msg
@@ -207,7 +237,7 @@ def catch_errors(fn):
 
 
 def create_gist(public, description, files):
-    file_data = dict((filename, {'content': text}) for filename, text in files.items())
+    file_data = dict((filename, {'content': text}) for filename, text in list(files.items()))
     data = json.dumps({'description': description, 'public': public, 'files': file_data})
     gist = api_request(GISTS_URL, data)
     return gist
@@ -258,9 +288,14 @@ def open_gist(gist_url):
 
         gistify_view(view, gist, gist_filename)
 
-        edit = view.begin_edit()
-        view.insert(edit, 0, gist['files'][gist_filename]['content'])
-        view.end_edit(edit)
+        if PY3:
+            view.run_command('append', {
+                'characters': gist['files'][gist_filename]['content'],
+                })
+        else:
+            edit = view.begin_edit()
+            view.insert(edit, 0, gist['files'][gist_filename]['content'])
+            view.end_edit(edit)
 
         if not "language" in gist['files'][gist_filename]:
             continue
@@ -284,14 +319,21 @@ def open_gist(gist_url):
 def insert_gist(gist_url):
     gist = api_request(gist_url)
     files = sorted(gist['files'].keys())
+
     for gist_filename in files:
         view = sublime.active_window().active_view()
-        edit = view.begin_edit()
-        for region in view.sel():
 
-            view.replace(edit, region, gist['files'][gist_filename]['content'])
+        if PY3:
+            view.run_command('insert', {
+                'characters': gist['files'][gist_filename]['content'],
+                })
+        else:
+            edit = view.begin_edit()
 
-        view.end_edit(edit)
+            for region in view.sel():
+                view.replace(edit, region, gist['files'][gist_filename]['content'])
+
+            view.end_edit(edit)
 
 
 def get_gists(url):
@@ -364,12 +406,15 @@ def api_request_native(url, data=None, method=None):
     try:
         request.add_header('Authorization', 'token ' + token_auth_string())
     except MissingTokenException:
-        request.add_header('Authorization', 'Basic ' + base64.urlsafe_b64encode(basic_auth_string()))
+        request.add_header(
+            'Authorization',
+            'Basic ' + str(base64.urlsafe_b64encode(basic_auth_string())))
+
     request.add_header('Accept', 'application/json')
     request.add_header('Content-Type', 'application/json')
 
     if data is not None:
-        request.add_data(data)
+        request.add_data(bytes(data, 'ASCII'))
 
     # print('API request data:', request.get_data())
     # print('API request header:', request.header_items())
@@ -384,7 +429,8 @@ def api_request_native(url, data=None, method=None):
             if response.code == 204:  # No Content
                 return None
             else:
-                return json.loads(response.read())
+                return json.loads(response.read().decode('ascii'))
+
     except urllib.HTTPError as err:
         with contextlib.closing(err):
             raise SimpleHTTPError(err.code, err.read())
@@ -443,7 +489,7 @@ def api_request_curl(url, data=None, method=None):
                 if responsecode == 204:  # No Content
                     return None
                 elif 200 <= responsecode < 300 or responsecode == 100:  # Continue
-                    return json.loads(response)
+                    return json.loads(response.decode('ascii'))
                 else:
                     raise SimpleHTTPError(responsecode, response)
 
@@ -458,6 +504,8 @@ class GistCommand(sublime_plugin.TextCommand):
 
     @catch_errors
     def run(self, edit):
+        initialize_globals()
+
         try:
             get_token()
         except MissingTokenException:
@@ -503,7 +551,7 @@ class GistCommand(sublime_plugin.TextCommand):
                 sublime.status_message("%s Gist: %s" % (self.mode(), gist_html_url))
 
                 if gistify:
-                    gistify_view(self.view, gist, gist['files'].keys()[0])
+                    gistify_view(self.view, gist, list(gist['files'].keys())[0])
                 # else:
                     # open_gist(gist['url'])
 
@@ -516,6 +564,9 @@ class GistViewCommand(object):
     """A base class for commands operating on a gistified view"""
     def is_enabled(self):
         return self.gist_url() is not None
+
+    def run(self, edit):
+        initialize_globals()
 
     def gist_url(self):
         return self.view.settings().get("gist_url")
@@ -532,16 +583,20 @@ class GistViewCommand(object):
 
 class GistCopyUrl(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
+        GistViewCommand.run(self, edit)
         sublime.set_clipboard(self.gist_html_url())
 
 
 class GistOpenBrowser(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
+        GistViewCommand.run(self, edit)
         webbrowser.open(self.gist_html_url())
 
 
 class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
+        GistViewCommand.run(self, edit)
+
         old_filename = self.gist_filename()
 
         @catch_errors
@@ -558,6 +613,8 @@ class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
 
 class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
+        GistViewCommand.run(self, edit)
+
         @catch_errors
         def on_gist_description(description):
             if description and description != self.gist_description():
@@ -575,6 +632,8 @@ class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
 class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
+        GistViewCommand.run(self, edit)
+
         text = self.view.substr(sublime.Region(0, self.view.size()))
         changes = {self.gist_filename(): {'content': text}}
         update_gist(self.gist_url(), changes)
@@ -584,6 +643,8 @@ class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
 class GistDeleteFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
+        GistViewCommand.run(self, edit)
+
         changes = {self.gist_filename(): None}
         update_gist(self.gist_url(), changes)
         ungistify_view(self.view)
@@ -593,6 +654,8 @@ class GistDeleteFileCommand(GistViewCommand, sublime_plugin.TextCommand):
 class GistDeleteCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
+        GistViewCommand.run(self, edit)
+
         gist_url = self.gist_url()
         api_request(gist_url, method='DELETE')
         for window in sublime.windows():
@@ -611,13 +674,15 @@ class GistListCommandBase(object):
 
     @catch_errors
     def run(self, *args):
+        initialize_globals()
+
         filtered = gists_filter(get_gists(GISTS_URL))
         parted = GISTS_URL.partition('?')
         STARRED_GISTS_URL = ''.join((parted[0] + STARRED, parted[1], parted[2]))
         filtered_stars = gists_filter(get_gists(STARRED_GISTS_URL))
 
         self.gists = filtered[0] + filtered_stars[0]
-        gist_names = filtered[1] + map(lambda x: ["* " + x[0]], filtered_stars[1])
+        gist_names = filtered[1] + list(map(lambda x: ["* " + x[0]], filtered_stars[1]))
 
         if settings.get('include_users'):
             self.users = list(settings.get('include_users'))
