@@ -414,7 +414,10 @@ def api_request_native(url, data=None, method=None):
     request.add_header('Content-Type', 'application/json')
 
     if data is not None:
-        request.add_data(bytes(data, 'ASCII'))
+        if PY3:
+            request.add_data(bytes(data, 'ASCII'))
+        else:
+            request.add_data(data)
 
     # print('API request data:', request.get_data())
     # print('API request header:', request.header_items())
