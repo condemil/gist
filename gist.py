@@ -90,111 +90,13 @@ class SimpleHTTPError(Exception):
         self.response = response
 
 
-class MissingTokenException(Exception):
-    pass
-
-
-def get_credentials():
-    username = settings.get('username')
-    password = settings.get('password')
-    if not username or not password:
-        raise MissingCredentialsException()
-    return (username, password)
-
-
-def basic_auth_string():
-    auth_string = '%s:%s' % get_credentials()
-    return bytes(auth_string, 'ascii')
-
-
-def get_token():
-    token = settings.get('token')
-    if not token:
-        raise MissingTokenException()
-    return token
-
-
 def token_auth_string():
-    auth_string = '%s' % get_token()
-    return auth_string
+    token = settings.get('token')
 
-if sublime.platform() == 'osx':
-    # Keychain support
-    # Instead of Gist.sublime-settings, fetch username and password from the user's github.com keychain entry
-    SERVER = b'github.com'
+    if not token:
+        raise MissingCredentialsException()
 
-    def create_keychain_accessor():
-        from ctypes import cdll, util, c_uint32, c_int, c_char_p, c_void_p, POINTER, pointer, byref, Structure, string_at
-        lib_security = cdll.LoadLibrary(util.find_library('Security'))
-
-        class SecKeychainAttributeInfo(Structure):
-            _fields_ = [("count", c_uint32), ("tag", POINTER(c_uint32)), ("format", POINTER(c_uint32))]
-
-        class SecKeychainAttribute(Structure):
-            _fields_ = [("tag", c_uint32), ("length", c_uint32), ("data", c_void_p)]
-
-        class SecKeychainAttributeList(Structure):
-            _fields_ = [("count", c_uint32), ("attr", POINTER(SecKeychainAttribute))]
-
-        PtrSecKeychainAttributeList = POINTER(SecKeychainAttributeList)
-
-        def keychain_get_credentials():
-            username = settings.get('username')
-            password = settings.get('password')
-            if username and password:
-                return (username, password)
-
-            password_buflen = c_uint32()
-            password_buf = c_void_p()
-            item = c_void_p()
-
-            error = lib_security.SecKeychainFindInternetPassword(
-               None,  # keychain, NULL = default
-               c_uint32(len(SERVER)),  # server name length
-               c_char_p(SERVER),      # server name
-               c_uint32(0),  # security domain - unused
-               None,        # security domain - unused
-               c_uint32(0 if not username else len(username)),  # account name length
-               None if not username else c_char_p(username),   # account name
-               c_uint32(0),  # path name length - unused
-               None,         # path name
-               c_uint32(0),  # port, 0 = any
-               c_int(0),  # kSecProtocolTypeAny
-               c_int(0),  # kSecAuthenticationTypeAny
-               None,  # returned password length - unused
-               None,  # returned password data - unused
-               byref(item))  # returned keychain item reference
-            if not error:
-                info = SecKeychainAttributeInfo(
-                    1,  # attribute count
-                    pointer(c_uint32(1633903476)),  # kSecAccountItemAttr
-                    pointer(c_uint32(6)))  # CSSM_DB_ATTRIBUTE_FORMAT_BLOB
-
-                attrlist_ptr = PtrSecKeychainAttributeList()
-                error = lib_security.SecKeychainItemCopyAttributesAndData(
-                    item,  # keychain item reference
-                    byref(info),  # list of attributes to retrieve
-                    None,  # returned item class - unused
-                    byref(attrlist_ptr),  # returned attribute data
-                    byref(password_buflen),  # returned password length
-                    byref(password_buf))  # returned password data
-
-                if not error:
-                    try:
-                        if attrlist_ptr.contents.count == 1:
-                            attr = attrlist_ptr.contents.attr.contents
-                            username = string_at(attr.data, attr.length)
-                            password = string_at(password_buf.value, password_buflen.value)
-                    finally:
-                        lib_security.SecKeychainItemFreeAttributesAndData(attrlist_ptr, password_buf)
-
-            if not username or not password:
-                raise MissingCredentialsException()
-            else:
-                return (username, password)
-
-        return keychain_get_credentials
-    get_credentials = create_keychain_accessor()
+    return token
 
 
 def catch_errors(fn):
@@ -203,7 +105,7 @@ def catch_errors(fn):
         try:
             return fn(*args, **kwargs)
         except MissingCredentialsException:
-            sublime.error_message("Gist: GitHub username or password isn't provided in Gist.sublime-settings file")
+            sublime.error_message("Gist: GitHub token isn't provided in Gist.sublime-settings file. All other authorization methods is deprecated.")
             user_settings_path = os.path.join(sublime.packages_path(), 'User', 'Gist.sublime-settings')
             if not os.path.exists(user_settings_path):
                 default_settings_path = os.path.join(sublime.packages_path(), 'Gist', 'Gist.sublime-settings')
@@ -233,6 +135,7 @@ def catch_errors(fn):
         except:
             traceback.print_exc()
             sublime.error_message("Gist: unknown error (please, report a bug!)")
+
     return _fn
 
 
@@ -403,13 +306,8 @@ def api_request_native(url, data=None, method=None):
     # print('API request url:', request.get_full_url())
     if method:
         request.get_method = lambda: method
-    try:
-        request.add_header('Authorization', 'token ' + token_auth_string())
-    except MissingTokenException:
-        request.add_header(
-            'Authorization',
-            'Basic ' + str(base64.urlsafe_b64encode(basic_auth_string())))
 
+    request.add_header('Authorization', 'token ' + token_auth_string())
     request.add_header('Accept', 'application/json')
     request.add_header('Content-Type', 'application/json')
 
@@ -452,13 +350,7 @@ def named_tempfile():
 def api_request_curl(url, data=None, method=None):
     command = ["curl", '-K', '-', url]
 
-    try:
-        config = ['--header "Authorization: token ' + token_auth_string() + '"',
-              '--header "Accept: application/json"',
-              '--header "Content-Type: application/json"',
-              "--silent"]
-    except MissingTokenException:
-        config = ['-u ' + basic_auth_string(),
+    config = ['--header "Authorization: token ' + token_auth_string() + '"',
               '--header "Accept: application/json"',
               '--header "Content-Type: application/json"',
               "--silent"]
@@ -509,10 +401,6 @@ class GistCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         initialize_globals()
 
-        try:
-            get_token()
-        except MissingTokenException:
-            get_credentials()
         regions = [region for region in self.view.sel() if not region.empty()]
 
         if len(regions) == 0:
