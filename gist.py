@@ -223,7 +223,7 @@ def catch_errors(fn):
         except SimpleHTTPError as err:
             msg = "Gist: GitHub returned error %d" % err.code
             try:
-                response_json = json.loads(err.response.decode('ascii'))
+                response_json = json.loads(err.response.decode('utf8'))
                 response_msg = response_json.get('message')
                 if response_msg:
                     msg += ": " + response_msg
@@ -415,7 +415,7 @@ def api_request_native(url, data=None, method=None):
 
     if data is not None:
         if PY3:
-            request.add_data(bytes(data, 'ASCII'))
+            request.add_data(bytes(data, 'utf8'))
         else:
             request.add_data(data)
 
@@ -432,7 +432,7 @@ def api_request_native(url, data=None, method=None):
             if response.code == 204:  # No Content
                 return None
             else:
-                return json.loads(response.read().decode('ascii'))
+                return json.loads(response.read().decode('utf8'))
 
     except urllib.HTTPError as err:
         with contextlib.closing(err):
@@ -492,7 +492,7 @@ def api_request_curl(url, data=None, method=None):
                 if responsecode == 204:  # No Content
                     return None
                 elif 200 <= responsecode < 300 or responsecode == 100:  # Continue
-                    return json.loads(response.decode('ascii'))
+                    return json.loads(response.decode('utf8'))
                 else:
                     raise SimpleHTTPError(responsecode, response)
 
