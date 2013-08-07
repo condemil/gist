@@ -4,12 +4,12 @@
     "token": "",
 
     // Show GitHub organizations
-    "include_orgs": true,
-    // "include_orgs": ["company1", "company2"],
+    // Example: "company1", "company2"
+    "include_orgs": [],
 
     // Show GitHub users
-    "include_users": false,
-    // "include_users": ["user1", "user2"],
+    // Example: "user1", "user2"
+    "include_users": [],
 
     // Show the authors of Gists
     "show_authors": false,
