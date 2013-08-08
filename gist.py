@@ -257,9 +257,12 @@ def get_user_gists(user):
 
 
 def gist_title(gist):
-    file_name = sorted(gist['files'].keys())
     description = gist.get('description')
-    title = description or file_name[0] or gist.get('id')
+
+    if description and settings.get('prefer_filename') is False:
+        title = description
+    else:
+        title = list(gist['files'].keys())[0]
 
     if settings.get('show_authors'):
         return [title, gist.get('user').get('login')]
@@ -277,27 +280,25 @@ def gists_filter(all_gists):
     else:
         tag_prog = False
 
-    if not prefix and not tag_prog:
-        return [all_gists, [gist_title(gist) for gist in all_gists]]
-
     gists = []
     gists_names = []
+
     for gist in all_gists:
+        if not gist['files']:
+            continue
+
         name = gist_title(gist)
 
         if prefix and name[0][0:prefix_len] == prefix:
             name[0] = name[0][prefix_len:]
-
-            gists.append(gist)
-            gists_names.append(name)
-
         elif tag_prog:
             match = re.search(tag_prog, name[0])
+
             if match:
                 name[0] = name[0][0:match.start()] + name[0][match.end():]
 
-                gists.append(gist)
-                gists_names.append(name)
+        gists.append(gist)
+        gists_names.append(name)
 
     return [gists, gists_names]
 
