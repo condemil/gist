@@ -140,6 +140,11 @@ def catch_errors(fn):
 
 
 def create_gist(public, description, files):
+    for filename, text in list(files.items()):
+        if not text:
+            sublime.error_message("Gist: Unable to create a Gist with empty content")
+            return
+
     file_data = dict((filename, {'content': text}) for filename, text in list(files.items()))
     data = json.dumps({'description': description, 'public': public, 'files': file_data})
     gist = api_request(GISTS_URL, data)
@@ -436,6 +441,9 @@ class GistCommand(sublime_plugin.TextCommand):
                     gist_data = dict((make_filename(idx), data) for idx, data in enumerate(region_data, 1))
 
                 gist = create_gist(self.public, description, gist_data)
+
+                if not gist:
+                    return
 
                 gist_html_url = gist['html_url']
                 sublime.set_clipboard(gist_html_url)
