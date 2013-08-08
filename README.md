@@ -22,8 +22,7 @@ As of [2013-05-16](https://github.com/blog/1509-personal-api-tokens), you can ge
 **All other authorization methods is deprecated.**
 
 ## Web
-* Account Settings
-* Applications
+* Account Settings -> [Applications](https://github.com/settings/applications)
 * "Create New Token" under "Personal API Access Tokens"
 * You might want to give the Token a useful name, Ex: sublime gist
 
