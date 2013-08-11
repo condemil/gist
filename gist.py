@@ -190,6 +190,9 @@ def open_gist(gist_url):
     files = sorted(gist['files'].keys())
 
     for gist_filename in files:
+        if gist['files'][gist_filename]['type'] != 'text/plain':
+            continue
+
         view = sublime.active_window().new_file()
 
         gistify_view(view, gist, gist_filename)
@@ -334,7 +337,7 @@ def api_request_native(url, data=None, method=None):
             if response.code == 204:  # No Content
                 return None
             else:
-                return json.loads(response.read().decode('utf8'))
+                return json.loads(response.read().decode('utf8', 'ignore'))
 
     except urllib.HTTPError as err:
         with contextlib.closing(err):
@@ -388,7 +391,7 @@ def api_request_curl(url, data=None, method=None):
                 if responsecode == 204:  # No Content
                     return None
                 elif 200 <= responsecode < 300 or responsecode == 100:  # Continue
-                    return json.loads(response.decode('utf8'))
+                    return json.loads(response.decode('utf8', 'ignore'))
                 else:
                     raise SimpleHTTPError(responsecode, response)
 
