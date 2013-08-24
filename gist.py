@@ -189,7 +189,7 @@ def open_gist(gist_url):
     files = sorted(gist['files'].keys())
 
     for gist_filename in files:
-        if gist['files'][gist_filename]['type'] != 'text/plain':
+        if gist['files'][gist_filename]['type'].split('/')[0] != 'text':
             continue
 
         view = sublime.active_window().new_file()
