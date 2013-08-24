@@ -372,7 +372,7 @@ def api_request_curl(url, data=None, method=None):
         header_output_file.close()
         with named_tempfile() as data_file:
             if data is not None:
-                data_file.write(data)
+                data_file.write(bytes(data, 'utf8'))
                 data_file.close()
                 config.append('--data-binary "@%s"' % data_file.name)
 
