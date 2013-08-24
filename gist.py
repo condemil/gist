@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 import sublime
@@ -378,7 +377,7 @@ def api_request_curl(url, data=None, method=None):
                 config.append('--data-binary "@%s"' % data_file.name)
 
             process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            response, _ = process.communicate('\n'.join(config))
+            response, _ = process.communicate(bytes('\n'.join(config), 'utf8'))
             returncode = process.returncode
 
             if returncode != 0:
