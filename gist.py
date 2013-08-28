@@ -318,10 +318,7 @@ def api_request_native(url, data=None, method=None):
     request.add_header('Content-Type', 'application/json')
 
     if data is not None:
-        if PY3:
-            request.add_data(bytes(data, 'utf8'))
-        else:
-            request.add_data(data)
+        request.add_data(bytes(data.encode('utf8')))
 
     # print('API request data:', request.get_data())
     # print('API request header:', request.header_items())
@@ -372,12 +369,12 @@ def api_request_curl(url, data=None, method=None):
         header_output_file.close()
         with named_tempfile() as data_file:
             if data is not None:
-                data_file.write(bytes(data, 'utf8'))
+                data_file.write(bytes(data.encode('utf8')))
                 data_file.close()
                 config.append('--data-binary "@%s"' % data_file.name)
 
             process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            response, _ = process.communicate(bytes('\n'.join(config), 'utf8'))
+            response, _ = process.communicate(bytes('\n'.join(config).encode('utf8')))
             returncode = process.returncode
 
             if returncode != 0:
