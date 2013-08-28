@@ -293,16 +293,24 @@ def gists_filter(all_gists):
 
         name = gist_title(gist)
 
+        if not prefix and not tag_prog:
+            gists.append(gist)
+            gists_names.append(name)
+
         if prefix and name[0][0:prefix_len] == prefix:
             name[0] = name[0][prefix_len:]
+
+            gists.append(gist)
+            gists_names.append(name)
+
         elif tag_prog:
             match = re.search(tag_prog, name[0])
 
             if match:
                 name[0] = name[0][0:match.start()] + name[0][match.end():]
 
-        gists.append(gist)
-        gists_names.append(name)
+                gists.append(gist)
+                gists_names.append(name)
 
     return [gists, gists_names]
 
