@@ -205,6 +205,9 @@ def open_gist(gist_url):
             view.insert(edit, 0, gist['files'][gist_filename]['content'])
             view.end_edit(edit)
 
+        if settings.get('supress_save_dialog'):
+            view.set_scratch(True)
+
         if not "language" in gist['files'][gist_filename]:
             continue
 
