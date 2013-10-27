@@ -288,18 +288,24 @@ def gists_filter(all_gists):
     gists_names = []
 
     for gist in all_gists:
+        name = gist_title(gist)
+
         if not gist['files']:
             continue
 
-        name = gist_title(gist)
+        if prefix: 
+            if name[0][0:prefix_len] == prefix:
+                name[0] = name[0][prefix_len:] # remove prefix from name
+            else:
+                continue
 
-        if prefix and name[0][0:prefix_len] == prefix:
-            name[0] = name[0][prefix_len:]
-        elif tag_prog:
+        if tag_prog:
             match = re.search(tag_prog, name[0])
 
             if match:
                 name[0] = name[0][0:match.start()] + name[0][match.end():]
+            else:
+                continue
 
         gists.append(gist)
         gists_names.append(name)
