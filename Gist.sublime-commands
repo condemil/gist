@@ -16,6 +16,10 @@
         "command": "insert_gist_list"
     },
     {
+        "caption": "Gist: Embed as script",
+        "command": "insert_gist_embed_list"
+    },
+    {
         "caption": "Gist: Add File to Gist",
         "command": "gist_add_file"
     },
