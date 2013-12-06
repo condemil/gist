@@ -189,8 +189,8 @@ def open_gist(gist_url):
     files = sorted(gist['files'].keys())
 
     for gist_filename in files:
-        if gist['files'][gist_filename]['type'].split('/')[0] != 'text':
-            continue
+        # if gist['files'][gist_filename]['type'].split('/')[0] != 'text':
+        #    continue
 
         view = sublime.active_window().new_file()
 
@@ -204,6 +204,9 @@ def open_gist(gist_url):
             edit = view.begin_edit()
             view.insert(edit, 0, gist['files'][gist_filename]['content'])
             view.end_edit(edit)
+
+        if settings.get('supress_save_dialog'):
+            view.set_scratch(True)
 
         if not "language" in gist['files'][gist_filename]:
             continue

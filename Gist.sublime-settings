@@ -32,7 +32,10 @@
     "max_gists": 100,
 
     // Only use starred gists
-    "use_starred": false
+    "use_starred": false,
+
+    // Disable the "save file..." dialog when closing a Gist
+    "supress_save_dialog": true
 
     // Limit to gists with specific prefix
     //"gist_prefix": "Snippet:",
