@@ -207,8 +207,10 @@ def open_gist(gist_url):
             view.end_edit(edit)
 
         if settings.get('supress_save_dialog'):
+            view.set_scratch(True)
+
+        if settings.get('save-update-hook'):
             view.retarget(tempfile.gettempdir() + '/' + gist_filename)
-            view.set_scratch(True) # Legacy for sublime text 2?
 
         if not "language" in gist['files'][gist_filename]:
             continue
@@ -651,15 +653,14 @@ class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
 class GistListener(GistViewCommand, sublime_plugin.EventListener):
     @catch_errors
     def on_pre_save(self, edit):
-        if settings.get('supress_save_dialog'):
+        if settings.get('save-update-hook'):
             if edit.settings().get('gist_filename') != None:
                 GistViewCommand.run(self, edit)
                 text = edit.substr(sublime.Region(0, edit.size()))
                 changes = {edit.settings().get('gist_filename'): {'content': text}}
                 update_gist(edit.settings().get('gist_url'), changes)
-
     def on_post_save_async(self, view):
-        if settings.get('supress_save_dialog'):
+        if settings.get('save-update-hook'):
             if view.settings().get('gist_filename'):
                 sublime.status_message("Gist updated")
 
