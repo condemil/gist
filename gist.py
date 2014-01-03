@@ -13,6 +13,7 @@ import tempfile
 import traceback
 import tempfile
 import contextlib
+import threading
 import shutil
 import re
 import codecs
@@ -157,6 +158,9 @@ def update_gist(gist_url, file_changes, new_description=None):
     data = json.dumps(request)
     # print('Data:', data)
     result = api_request(gist_url, data, method="PATCH")
+
+    sublime.status_message("Gist updated")
+
     # print('Result:', result)
     return result
 
@@ -658,12 +662,9 @@ class GistListener(GistViewCommand, sublime_plugin.EventListener):
                 GistViewCommand.run(self, edit)
                 text = edit.substr(sublime.Region(0, edit.size()))
                 changes = {edit.settings().get('gist_filename'): {'content': text}}
-                update_gist(edit.settings().get('gist_url'), changes)
-    def on_post_save_async(self, view):
-        if settings.get('save-update-hook'):
-            if view.settings().get('gist_filename'):
-                sublime.status_message("Gist updated")
-
+                gist_url = edit.settings().get('gist_url')
+                # Start update_gist in a thread so we don't stall the save
+                threading.Thread(target=update_gist, args=(gist_url, changes)).start()
 
 class InsertGistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
     @catch_errors
