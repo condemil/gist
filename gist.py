@@ -215,6 +215,8 @@ def open_gist(gist_url):
 
         if settings.get('save-update-hook'):
             view.retarget(tempfile.gettempdir() + '/' + gist_filename)
+            # save over it (to stop us reloading from that file in case it exists)
+            view.run_command('save')
 
         if not "language" in gist['files'][gist_filename]:
             continue
