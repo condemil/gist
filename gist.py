@@ -215,7 +215,9 @@ def open_gist(gist_url):
 
         if settings.get('save-update-hook'):
             view.retarget(tempfile.gettempdir() + '/' + gist_filename)
-            # save over it (to stop us reloading from that file in case it exists)
+            # Save over it (to stop us reloading from that file in case it exists)
+            # But don't actually do a gist update
+            view.settings().set('do-update', False)
             view.run_command('save')
 
         if not "language" in gist['files'][gist_filename]:
@@ -658,13 +660,17 @@ class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
 
 class GistListener(GistViewCommand, sublime_plugin.EventListener):
     @catch_errors
-    def on_pre_save(self, edit):
+    def on_pre_save(self, view):
         if settings.get('save-update-hook'):
-            if edit.settings().get('gist_filename') != None:
-                GistViewCommand.run(self, edit)
-                text = edit.substr(sublime.Region(0, edit.size()))
-                changes = {edit.settings().get('gist_filename'): {'content': text}}
-                gist_url = edit.settings().get('gist_url')
+            if view.settings().get('gist_filename') != None:
+                # we ignore the first update, it happens on loading a gist
+                if not view.settings().get('do-update'):
+                   view.settings().set('do-update', True)
+                   return
+                GistViewCommand.run(self, view)
+                text = view.substr(sublime.Region(0, view.size()))
+                changes = {view.settings().get('gist_filename'): {'content': text}}
+                gist_url = view.settings().get('gist_url')
                 # Start update_gist in a thread so we don't stall the save
                 threading.Thread(target=update_gist, args=(gist_url, changes)).start()
 
