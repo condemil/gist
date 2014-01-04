@@ -150,16 +150,17 @@ def create_gist(public, description, files):
     return gist
 
 
-def update_gist(gist_url, file_changes, new_description=None):
+def update_gist(gist_url, file_changes, auth_token=None, https_proxy=None, new_description=None):
     request = {'files': file_changes}
     # print('Request:', request)
     if new_description is not None:
         request['description'] = new_description
     data = json.dumps(request)
     # print('Data:', data)
-    result = api_request(gist_url, data, method="PATCH")
+    result = api_request(gist_url, data, token=auth_token, https_proxy=https_proxy, method="PATCH")
 
-    sublime.status_message("Gist updated")
+    if PY3:
+        sublime.status_message("Gist updated") # can only be called by main thread in sublime text 2
 
     # print('Result:', result)
     return result
@@ -328,13 +329,13 @@ def gists_filter(all_gists):
     return [gists, gists_names]
 
 
-def api_request_native(url, data=None, method=None):
+def api_request_native(url, data=None, token=None, https_proxy=None, method=None):
     request = urllib.Request(url)
     # print('API request url:', request.get_full_url())
     if method:
         request.get_method = lambda: method
-
-    request.add_header('Authorization', 'token ' + token_auth_string())
+    auth_token = token if token != None else token_auth_string()
+    request.add_header('Authorization', 'token ' + auth_token)
     request.add_header('Accept', 'application/json')
     request.add_header('Content-Type', 'application/json')
 
@@ -343,9 +344,10 @@ def api_request_native(url, data=None, method=None):
 
     # print('API request data:', request.get_data())
     # print('API request header:', request.header_items())
-    if settings.get('https_proxy'):
+    https_proxy = https_proxy if https_proxy != None else settings.get('https_proxy')
+    if https_proxy:
         opener = urllib.build_opener(urllib.HTTPHandler(), urllib.HTTPSHandler(),
-                                     urllib.ProxyHandler({'https': settings.get('https_proxy')}))
+                                     urllib.ProxyHandler({'https': https_proxy}))
 
         urllib.install_opener(opener)
 
@@ -371,10 +373,10 @@ def named_tempfile():
         os.unlink(tmpfile.name)
 
 
-def api_request_curl(url, data=None, method=None):
+def api_request_curl(url, data=None, token=None, https_proxy=None, method=None):
     command = ["curl", '-K', '-', url]
 
-    config = ['--header "Authorization: token ' + token_auth_string() + '"',
+    config = ['--header "Authorization: token ' + token if token != None else token_auth_string() + '"',
               '--header "Accept: application/json"',
               '--header "Content-Type: application/json"',
               "--silent"]
@@ -382,8 +384,9 @@ def api_request_curl(url, data=None, method=None):
     if method:
         config.append('--request "%s"' % method)
 
-    if settings.get('https_proxy'):
-        config.append(settings.get('https_proxy'))
+    https_proxy = https_proxy if https_proxy != None else settings.get('https_proxy')
+    if https_proxy:
+        config.append(https_proxy)
 
     with named_tempfile() as header_output_file:
         config.append('--dump-header "%s"' % header_output_file.name)
@@ -661,9 +664,8 @@ class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
 class GistListener(GistViewCommand, sublime_plugin.EventListener):
     @catch_errors
     def on_pre_save(self, view):
-        GistViewCommand.run(self, view)
-        if settings.get('save-update-hook'):
-            if view.settings().get('gist_filename') != None:
+        if view.settings().get('gist_filename') != None:
+            if settings.get('save-update-hook'):
                 # we ignore the first update, it happens on loading a gist
                 if not view.settings().get('do-update'):
                    view.settings().set('do-update', True)
@@ -672,7 +674,7 @@ class GistListener(GistViewCommand, sublime_plugin.EventListener):
                 changes = {view.settings().get('gist_filename'): {'content': text}}
                 gist_url = view.settings().get('gist_url')
                 # Start update_gist in a thread so we don't stall the save
-                threading.Thread(target=update_gist, args=(gist_url, changes)).start()
+                threading.Thread(target=update_gist, args=(gist_url, changes, settings.get('token'), settings.get('https_proxy'))).start()
 
 class InsertGistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
     @catch_errors
