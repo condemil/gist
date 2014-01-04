@@ -66,6 +66,10 @@ Edit the settings file (it should open automatically the first time you use a Gi
 
     Limit the Gists displayed in the `Open Gist` list by prefix. Leave blank to display all Gists. Example: `"gist_prefix": "Snippet:"` will only list Gists with names starting with the text **Snippet:**.
 
+* `"save-update-hook": true`
+
+    Set the on-save behaviour of a loaded Gist. True implies that when the Gist is saved, it'll update the online Gist. False implies that it'll bring up a save dialog for the Gist to be saved to disk.
+
 
 # Usage
 
