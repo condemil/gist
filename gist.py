@@ -334,8 +334,8 @@ def api_request_native(url, data=None, token=None, https_proxy=None, method=None
     # print('API request url:', request.get_full_url())
     if method:
         request.get_method = lambda: method
-    auth_token = token if token != None else token_auth_string()
-    request.add_header('Authorization', 'token ' + auth_token)
+    token = token if token != None else token_auth_string()
+    request.add_header('Authorization', 'token ' + token)
     request.add_header('Accept', 'application/json')
     request.add_header('Content-Type', 'application/json')
 
@@ -375,8 +375,8 @@ def named_tempfile():
 
 def api_request_curl(url, data=None, token=None, https_proxy=None, method=None):
     command = ["curl", '-K', '-', url]
-
-    config = ['--header "Authorization: token ' + token if token != None else token_auth_string() + '"',
+    token = token if token != None else token_auth_string()
+    config = ['--header "Authorization: token ' + token + '"',
               '--header "Accept: application/json"',
               '--header "Content-Type: application/json"',
               "--silent"]
