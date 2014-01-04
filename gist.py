@@ -661,12 +661,13 @@ class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
     def get_window(self):
         return self.window
 
+
 class GistListener(GistViewCommand, sublime_plugin.EventListener):
     @catch_errors
     def on_pre_save(self, view):
         if view.settings().get('gist_filename') != None:
             if settings.get('save-update-hook'):
-                # we ignore the first update, it happens on loading a gist
+                # we ignore the first update, it happens upon loading a gist
                 if not view.settings().get('do-update'):
                    view.settings().set('do-update', True)
                    return
@@ -675,6 +676,7 @@ class GistListener(GistViewCommand, sublime_plugin.EventListener):
                 gist_url = view.settings().get('gist_url')
                 # Start update_gist in a thread so we don't stall the save
                 threading.Thread(target=update_gist, args=(gist_url, changes, settings.get('token'), settings.get('https_proxy'))).start()
+
 
 class InsertGistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
     @catch_errors

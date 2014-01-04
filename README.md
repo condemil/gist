@@ -1,6 +1,6 @@
 # Gist
 
-A [Sublime Text 2](http://www.sublimetext.com/) plugin for creating and editing Gists.
+A [Sublime Text 2/3](http://www.sublimetext.com/) plugin for creating and editing Gists.
 
 
 # Installation
@@ -77,7 +77,7 @@ Use the `Gist` / `Create Public Gist` or `Gist` / `Create Private Gist` commands
 
 ## Editing existing Gists
 
-Use the `Gist` / `Open Gist` command to see a list of your Gists. Selecting one will open the files from that Gist in new tabs. You can then edit the files normally and use `Gist` / `Update File` to update the Gist, or use other commands to change Gist description, remove or rename files, or delete the Gist.
+Use the `Gist` / `Open Gist` command to see a list of your Gists. Selecting one will open the files from that Gist in new tabs. You can then edit the files normally and save to update the Gist, or use other commands to change Gist description, remove or rename files, or delete the Gist.
 
 
 ## Adding new files to existing Gists
