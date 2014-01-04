@@ -103,6 +103,8 @@ def catch_errors(fn):
     def _fn(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
+        except NameError:
+            initialize_globals()
         except MissingCredentialsException:
             sublime.error_message("Gist: GitHub token isn't provided in Gist.sublime-settings file. All other authorization methods is deprecated.")
             user_settings_path = os.path.join(sublime.packages_path(), 'User', 'Gist.sublime-settings')
@@ -661,7 +663,7 @@ class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
 class GistListener(GistViewCommand, sublime_plugin.EventListener):
     @catch_errors
     def on_pre_save(self, view):
-        if settings != None and settings.get('save-update-hook'):
+        if settings.get('save-update-hook'):
             if view.settings().get('gist_filename') != None:
                 # we ignore the first update, it happens on loading a gist
                 if not view.settings().get('do-update'):
