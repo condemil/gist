@@ -225,9 +225,10 @@ def open_gist(gist_url):
         if int(sublime.version()) > 3000:
             new_syntax_path = os.path.join('Packages', language, "{0}.tmLanguage".format(language))
             view.set_syntax_file(new_syntax)
-        elif os.path.exists(new_syntax_path):
+        else:
             new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
-            view.set_syntax_file(new_syntax_path)
+            if os.path.exists(new_syntax_path):
+                view.set_syntax_file(new_syntax_path)
 
 
 def insert_gist(gist_url):
