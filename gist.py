@@ -221,10 +221,22 @@ def open_gist(gist_url):
         else:
             new_syntax = os.path.join(language, "{0}.tmLanguage".format(language))
 
-        new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
+        if PY3:
+            new_syntax_path = os.path.join('Packages', new_syntax)
 
-        if os.path.exists(new_syntax_path):
-            view.set_syntax_file(new_syntax_path)
+            if sublime.platform() == 'windows':
+                new_syntax_path = new_syntax_path.replace('\\', '/')
+
+            try:
+                sublime.load_resource(new_syntax_path)
+                view.set_syntax_file(new_syntax_path)
+            except:
+                pass
+        else:
+            new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
+
+            if os.path.exists(new_syntax_path):
+                view.set_syntax_file(new_syntax_path)
 
 
 def insert_gist(gist_url):
@@ -296,7 +308,7 @@ def gists_filter(all_gists):
         if not gist['files']:
             continue
 
-        if prefix: 
+        if prefix:
             if name[0][0:prefix_len] == prefix:
                 name[0] = name[0][prefix_len:] # remove prefix from name
             else:
