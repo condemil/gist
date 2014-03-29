@@ -35,7 +35,10 @@
     "use_starred": false,
 
     // Disable the "save file..." dialog when closing a Gist
-    "supress_save_dialog": true
+    "supress_save_dialog": true,
+
+    // Update the Gist upon saving the file, suppressing the filename dialog.
+    "save-update-hook": true
 
     // Limit to gists with specific prefix
     //"gist_prefix": "Snippet:",
