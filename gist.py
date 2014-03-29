@@ -334,7 +334,7 @@ def gists_filter(all_gists):
         if not gist['files']:
             continue
 
-        if prefix: 
+        if prefix:
             if name[0][0:prefix_len] == prefix:
                 name[0] = name[0][prefix_len:] # remove prefix from name
             else:
@@ -632,7 +632,7 @@ class GistListCommandBase(object):
 
         if settings.get('include_users'):
             self.users = list(settings.get('include_users'))
-            gist_names = ["> " + user for user in self.users] + gist_names
+            gist_names = [["> " + user] for user in self.users] + gist_names
 
         if settings.get('include_orgs'):
             if settings.get('include_orgs') == True:
@@ -640,7 +640,7 @@ class GistListCommandBase(object):
             else:
                 self.orgs = settings.get('include_orgs')
 
-            gist_names = ["> " + org for org in self.orgs] + gist_names
+            gist_names = [["> " + org] for org in self.orgs] + gist_names
 
         # print(gist_names)
 
