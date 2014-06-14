@@ -236,10 +236,17 @@ def open_gist(gist_url):
         else:
             new_syntax = os.path.join(language, "{0}.tmLanguage".format(language))
 
-        # Version check to support both ST2 and ST3 syntax file loading
-        if int(sublime.version()) > 3000:
-            new_syntax_path = os.path.join('Packages', language, "{0}.tmLanguage".format(language))
-            view.set_syntax_file(new_syntax_path)
+        if PY3:
+            new_syntax_path = os.path.join('Packages', new_syntax)
+
+            if sublime.platform() == 'windows':
+                new_syntax_path = new_syntax_path.replace('\\', '/')
+
+            try:
+                sublime.load_resource(new_syntax_path)
+                view.set_syntax_file(new_syntax_path)
+            except:
+                pass
         else:
             new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
             if os.path.exists(new_syntax_path):
