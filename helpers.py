@@ -113,7 +113,7 @@ def set_syntax(view, file_data):
         new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
 
     try:
-        print(new_syntax_path)
+        #print(new_syntax_path)
         view.set_syntax_file(new_syntax_path)
     except:
         pass

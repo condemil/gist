@@ -147,21 +147,6 @@ def insert_gist_embed(gist_url):
 
             view.end_edit(edit)
 
-def get_gists(url):
-    return api_request(url)
-
-
-def get_orgs():
-    return api_request(ORGS_URL)
-
-
-def get_org_members(org):
-    return api_request(ORG_MEMBERS_URL % org)
-
-
-def get_user_gists(user):
-    return api_request(USER_GISTS_URL % user)
-
 
 class GistCommand(sublime_plugin.TextCommand):
     public = True
@@ -171,8 +156,6 @@ class GistCommand(sublime_plugin.TextCommand):
 
     @catch_errors
     def run(self, edit):
-        initialize_globals()
-
         regions = [region for region in self.view.sel() if not region.empty()]
 
         if len(regions) == 0:
@@ -231,9 +214,6 @@ class GistViewCommand(object):
     def is_enabled(self):
         return self.gist_url() is not None
 
-    def run(self, edit):
-        initialize_globals()
-
     def gist_url(self):
         return self.view.settings().get("gist_url")
 
@@ -249,20 +229,16 @@ class GistViewCommand(object):
 
 class GistCopyUrl(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
-        GistViewCommand.run(self, edit)
         sublime.set_clipboard(self.gist_html_url())
 
 
 class GistOpenBrowser(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
-        GistViewCommand.run(self, edit)
         webbrowser.open(self.gist_html_url())
 
 
 class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
-        GistViewCommand.run(self, edit)
-
         old_filename = self.gist_filename()
 
         @catch_errors
@@ -279,8 +255,6 @@ class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
 
 class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
-        GistViewCommand.run(self, edit)
-
         @catch_errors
         def on_gist_description(description):
             if description and description != self.gist_description():
@@ -298,8 +272,6 @@ class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
 class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
-        GistViewCommand.run(self, edit)
-
         text = self.view.substr(sublime.Region(0, self.view.size()))
         changes = {self.gist_filename(): {'content': text}}
         update_gist(self.gist_url(), changes)
@@ -309,8 +281,6 @@ class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
 class GistDeleteFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
-        GistViewCommand.run(self, edit)
-
         changes = {self.gist_filename(): None}
         update_gist(self.gist_url(), changes)
         ungistify_view(self.view)
@@ -320,8 +290,6 @@ class GistDeleteFileCommand(GistViewCommand, sublime_plugin.TextCommand):
 class GistDeleteCommand(GistViewCommand, sublime_plugin.TextCommand):
     @catch_errors
     def run(self, edit):
-        GistViewCommand.run(self, edit)
-
         gist_url = self.gist_url()
         api_request(gist_url, method='DELETE')
         for window in sublime.windows():
@@ -340,12 +308,8 @@ class GistListCommandBase(object):
 
     @catch_errors
     def run(self, *args):
-        initialize_globals()
-
-        filtered = gists_filter(get_gists(GISTS_URL))
-        parted = GISTS_URL.partition('?')
-        STARRED_GISTS_URL = ''.join((parted[0] + STARRED, parted[1], parted[2]))
-        filtered_stars = gists_filter(get_gists(STARRED_GISTS_URL))
+        filtered = gists_filter(api_request(settings.GISTS_URL))
+        filtered_stars = gists_filter(api_request(settings.STARRED_GISTS_URL))
 
         self.gists = filtered[0] + filtered_stars[0]
         gist_names = filtered[1] + list(map(lambda x: [u"★ " + x[0]], filtered_stars[1]))
@@ -356,7 +320,7 @@ class GistListCommandBase(object):
 
         if settings.get('include_orgs'):
             if settings.get('include_orgs') == True:
-                self.orgs = [org.get("login") for org in get_orgs()]
+                self.orgs = [org.get("login") for org in api_request(settings.ORGS_URL)]
             else:
                 self.orgs = settings.get('include_orgs')
 
@@ -373,9 +337,9 @@ class GistListCommandBase(object):
             elif num < offOrgs:
                 self.gists = []
 
-                members = [member.get("login") for member in get_org_members(self.orgs[num])]
+                members = [member.get("login") for member in api_request(settings.ORG_MEMBERS_URL % self.orgs[num])]
                 for member in members:
-                    self.gists += get_user_gists(member)
+                    self.gists += api_request(settings.USER_GISTS_URL % member)
 
                 filtered = gists_filter(self.gists)
                 self.gists = filtered[0]
@@ -385,7 +349,7 @@ class GistListCommandBase(object):
                 self.orgs = self.users = []
                 self.get_window().show_quick_panel(gist_names, on_gist_num)
             elif num < offUsers:
-                filtered = gists_filter(get_user_gists(self.users[num - offOrgs]))
+                filtered = gists_filter(api_request(settings.USER_GISTS_URL % self.users[num - offOrgs]))
                 self.gists = filtered[0]
                 gist_names = filtered[1]
                 # print(gist_names)
