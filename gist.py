@@ -5,97 +5,23 @@ import sublime_plugin
 import os
 import sys
 import json
-import base64
-import subprocess
 import functools
 import webbrowser
 import tempfile
 import traceback
-import tempfile
-import contextlib
 import threading
 import shutil
-import re
-import codecs
 
 PY3 = sys.version > '3'
 
 if PY3:
-    import urllib.request as urllib
+    from .request import *
+    from .settings import *
+    from .helpers import *
 else:
-    import urllib2 as urllib
-
-global settings
-global DEFAULT_CREATE_PUBLIC_VALUE
-global DEFAULT_USE_PROXY_VALUE
-global GISTS_URL
-global USER_GISTS_URL
-global ORGS_URL
-global ORG_MEMBERS_URL
-global STARRED
-
-
-def initialize_globals():
-    '''
-    Initialize globals. In Sublime Text 3 this can no longer me done in
-    the module scope.
-
-    See "Restricted API Usage at Startup" in the following document.
-    http://www.sublimetext.com/docs/3/porting_guide.html
-    '''
-    global settings
-    global DEFAULT_CREATE_PUBLIC_VALUE
-    global DEFAULT_USE_PROXY_VALUE
-    global GISTS_URL
-    global USER_GISTS_URL
-    global ORGS_URL
-    global ORG_MEMBERS_URL
-    global STARRED
-
-    settings = sublime.load_settings('Gist.sublime-settings')
-    DEFAULT_CREATE_PUBLIC_VALUE = 'false'
-    DEFAULT_USE_PROXY_VALUE = 'false'
-    GISTS_URL = 'https://api.github.com/gists'
-    USER_GISTS_URL = 'https://api.github.com/users/%s/gists'
-    ORGS_URL = 'https://api.github.com/user/orgs'
-    ORG_MEMBERS_URL = 'https://api.github.com/orgs/%s/members'
-    STARRED = '/starred'
-
-    #Enterprise support:
-    if settings.get('enterprise'):
-        GISTS_URL = settings.get('url')
-        if not GISTS_URL:
-            raise MissingCredentialsException()
-        GISTS_URL += '/api/v3/gists'
-
-    #Per page support (max 100)
-    if settings.get('max_gists'):
-        if settings.get('max_gists') <= 100:
-            MAX_GISTS = '?per_page=%d' % settings.get('max_gists')
-            GISTS_URL += MAX_GISTS
-            USER_GISTS_URL += MAX_GISTS
-        else:
-            settings.set('max_gists', 100)
-            sublime.status_message("Gist: GitHub API does not support a value of higher than 100")
-
-
-class MissingCredentialsException(Exception):
-    pass
-
-
-class SimpleHTTPError(Exception):
-    def __init__(self, code, response):
-        self.code = code
-        self.response = response
-
-
-def token_auth_string():
-    token = settings.get('token')
-
-    if not token:
-        raise MissingCredentialsException()
-
-    return token
+    from request import *
+    from settings import *
+    from helpers import *
 
 
 def catch_errors(fn):
@@ -110,27 +36,6 @@ def catch_errors(fn):
                 default_settings_path = os.path.join(sublime.packages_path(), 'Gist', 'Gist.sublime-settings')
                 shutil.copy(default_settings_path, user_settings_path)
             sublime.active_window().open_file(user_settings_path)
-        except subprocess.CalledProcessError as err:
-            sublime.error_message("Gist: Error while contacting GitHub: cURL returned %d" % err.returncode)
-        except EnvironmentError as err:
-            traceback.print_exc()
-            if type(err) == OSError and err.errno == 2 and api_request == api_request_curl:
-                sublime.error_message("Gist: Unable to find Python SSL module or cURL")
-            else:
-                msg = "Gist: Error while contacting GitHub"
-                if err.strerror:
-                    msg += err.strerror
-                sublime.error_message(msg)
-        except SimpleHTTPError as err:
-            msg = "Gist: GitHub returned error %d" % err.code
-            try:
-                response_json = json.loads(err.response.decode('utf8'))
-                response_msg = response_json.get('message')
-                if response_msg:
-                    msg += ": " + response_msg
-            except ValueError:
-                pass
-            sublime.error_message(msg)
         except:
             traceback.print_exc()
             sublime.error_message("Gist: unknown error (please, report a bug!)")
@@ -164,29 +69,6 @@ def update_gist(gist_url, file_changes, auth_token=None, https_proxy=None, new_d
 
     # print('Result:', result)
     return result
-
-
-def gistify_view(view, gist, gist_filename):
-    statusline_string = "Gist: " + gist_title(gist)[0]
-
-    if not view.file_name():
-        view.set_name(gist_filename)
-    elif os.path.basename(view.file_name()) != gist_filename:
-        statusline_string = "%s (%s)" % (statusline_string, gist_filename)
-
-    view.settings().set('gist_html_url', gist["html_url"])
-    view.settings().set('gist_description', gist['description'])
-    view.settings().set('gist_url', gist["url"])
-    view.settings().set('gist_filename', gist_filename)
-    view.set_status("Gist", statusline_string)
-
-
-def ungistify_view(view):
-    view.settings().erase('gist_html_url')
-    view.settings().erase('gist_description')
-    view.settings().erase('gist_url')
-    view.settings().erase('gist_filename')
-    view.erase_status("Gist")
 
 
 def open_gist(gist_url):
@@ -223,34 +105,7 @@ def open_gist(gist_url):
             view.settings().set('do-update', False)
             view.run_command('save')
 
-        if not "language" in gist['files'][gist_filename]:
-            continue
-
-        language = gist['files'][gist_filename]['language']
-
-        if language is None:
-            continue
-
-        if language == 'C':
-            new_syntax = os.path.join('C++', "{0}.tmLanguage".format(language))
-        else:
-            new_syntax = os.path.join(language, "{0}.tmLanguage".format(language))
-
-        if PY3:
-            new_syntax_path = os.path.join('Packages', new_syntax)
-
-            if sublime.platform() == 'windows':
-                new_syntax_path = new_syntax_path.replace('\\', '/')
-
-            try:
-                sublime.load_resource(new_syntax_path)
-                view.set_syntax_file(new_syntax_path)
-            except:
-                pass
-        else:
-            new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
-            if os.path.exists(new_syntax_path):
-                view.set_syntax_file(new_syntax_path)
+        set_syntax(view, gist['files'][gist_filename])
 
 
 def insert_gist(gist_url):
@@ -306,148 +161,6 @@ def get_org_members(org):
 
 def get_user_gists(user):
     return api_request(USER_GISTS_URL % user)
-
-
-def gist_title(gist):
-    description = gist.get('description')
-
-    if description and settings.get('prefer_filename') is False:
-        title = description
-    else:
-        title = list(gist['files'].keys())[0]
-
-    if settings.get('show_authors'):
-        return [title, gist.get('user').get('login')]
-    else:
-        return [title]
-
-
-def gists_filter(all_gists):
-    prefix = settings.get('gist_prefix')
-    if prefix:
-        prefix_len = len(prefix)
-
-    if settings.get('gist_tag'):
-        tag_prog = re.compile('(^|\s)#' + re.escape(settings.get('gist_tag')) + '($|\s)')
-    else:
-        tag_prog = False
-
-    gists = []
-    gists_names = []
-
-    for gist in all_gists:
-        name = gist_title(gist)
-
-        if not gist['files']:
-            continue
-
-        if prefix:
-            if name[0][0:prefix_len] == prefix:
-                name[0] = name[0][prefix_len:] # remove prefix from name
-            else:
-                continue
-
-        if tag_prog:
-            match = re.search(tag_prog, name[0])
-
-            if match:
-                name[0] = name[0][0:match.start()] + name[0][match.end():]
-            else:
-                continue
-
-        gists.append(gist)
-        gists_names.append(name)
-
-    return [gists, gists_names]
-
-
-def api_request_native(url, data=None, token=None, https_proxy=None, method=None):
-    request = urllib.Request(url)
-    # print('API request url:', request.get_full_url())
-    if method:
-        request.get_method = lambda: method
-    token = token if token != None else token_auth_string()
-    request.add_header('Authorization', 'token ' + token)
-    request.add_header('Accept', 'application/json')
-    request.add_header('Content-Type', 'application/json')
-
-    if data is not None:
-        request.add_data(bytes(data.encode('utf8')))
-
-    # print('API request data:', request.get_data())
-    # print('API request header:', request.header_items())
-    https_proxy = https_proxy if https_proxy != None else settings.get('https_proxy')
-    if https_proxy:
-        opener = urllib.build_opener(urllib.HTTPHandler(), urllib.HTTPSHandler(),
-                                     urllib.ProxyHandler({'https': https_proxy}))
-
-        urllib.install_opener(opener)
-
-    try:
-        with contextlib.closing(urllib.urlopen(request)) as response:
-            if response.code == 204:  # No Content
-                return None
-            else:
-                return json.loads(response.read().decode('utf8', 'ignore'))
-
-    except urllib.HTTPError as err:
-        with contextlib.closing(err):
-            raise SimpleHTTPError(err.code, err.read())
-
-
-@contextlib.contextmanager
-def named_tempfile():
-    tmpfile = tempfile.NamedTemporaryFile(delete=False)
-    try:
-        yield tmpfile
-    finally:
-        tmpfile.close()
-        os.unlink(tmpfile.name)
-
-
-def api_request_curl(url, data=None, token=None, https_proxy=None, method=None):
-    command = ["curl", '-K', '-', url]
-    token = token if token != None else token_auth_string()
-    config = ['--header "Authorization: token ' + token + '"',
-              '--header "Accept: application/json"',
-              '--header "Content-Type: application/json"',
-              "--silent"]
-
-    if method:
-        config.append('--request "%s"' % method)
-
-    https_proxy = https_proxy if https_proxy != None else settings.get('https_proxy')
-    if https_proxy:
-        config.append(https_proxy)
-
-    with named_tempfile() as header_output_file:
-        config.append('--dump-header "%s"' % header_output_file.name)
-        header_output_file.close()
-        with named_tempfile() as data_file:
-            if data is not None:
-                data_file.write(bytes(data.encode('utf8')))
-                data_file.close()
-                config.append('--data-binary "@%s"' % data_file.name)
-
-            process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            response, _ = process.communicate(bytes('\n'.join(config).encode('utf8')))
-            returncode = process.returncode
-
-            if returncode != 0:
-                raise subprocess.CalledProcessError(returncode, 'curl')
-
-            with open(header_output_file.name, "r") as headers:
-                _, responsecode, message = headers.readline().split(None, 2)
-                responsecode = int(responsecode)
-
-                if responsecode == 204:  # No Content
-                    return None
-                elif 200 <= responsecode < 300 or responsecode == 100:  # Continue
-                    return json.loads(response.decode('utf8', 'ignore'))
-                else:
-                    raise SimpleHTTPError(responsecode, response)
-
-api_request = api_request_curl if ('ssl' not in sys.modules and os.name != 'nt') else api_request_native
 
 
 class GistCommand(sublime_plugin.TextCommand):
