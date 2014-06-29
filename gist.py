@@ -51,7 +51,7 @@ def create_gist(public, description, files):
 
     file_data = dict((filename, {'content': text}) for filename, text in list(files.items()))
     data = json.dumps({'description': description, 'public': public, 'files': file_data})
-    gist = api_request(GISTS_URL, data)
+    gist = api_request(settings.GISTS_URL, data)
     return gist
 
 
