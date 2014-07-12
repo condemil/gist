@@ -23,8 +23,9 @@ As of [2013-05-16](https://github.com/blog/1509-personal-api-tokens), you can ge
 
 ## Web
 * Account Settings -> [Applications](https://github.com/settings/applications)
-* "Create New Token" under "Personal API Access Tokens"
-* You might want to give the Token a useful name, Ex: sublime gist
+* "Generate new token" under "Personal access tokens"
+* For "Token description" you should give it a meaningful name, Example: sublime gist
+* Under "Select scopes" you can just select gist
 
 Paste the token in the settings section under the token option.
 
