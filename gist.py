@@ -24,6 +24,12 @@ else:
     from helpers import *
 
 
+def plugin_loaded():
+    settings.loaded_settings = sublime.load_settings('Gist.sublime-settings')
+    settings.get = settings.loaded_settings.get
+    settings.set = settings.loaded_settings.set
+
+
 def catch_errors(fn):
     @functools.wraps(fn)
     def _fn(*args, **kwargs):
