@@ -1,0 +1,13 @@
+language: python
+
+python:
+  - "3.4"
+
+install:
+  - pip install flake8
+
+script:
+  - flake8 .
+
+notifications:
+  email: false

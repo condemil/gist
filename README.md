@@ -1,4 +1,4 @@
-# Gist
+# Gist [![Build Status](https://travis-ci.org/condemil/Gist.svg?branch=master)](https://travis-ci.org/condemil/Gist)
 
 A [Sublime Text 2/3](http://www.sublimetext.com/) plugin for creating and editing Gists.
 
