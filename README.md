@@ -40,7 +40,7 @@ Where USERNAME is your Github username. Save the token generated and paste it in
 
 # Options
 
-Edit the settings file (it should open automatically the first time you use a Gist command) to specifiy either token.
+Edit the settings file (it should open automatically the first time you use a Gist command) to specify either token.
 
 *   `"token": ""`
 
