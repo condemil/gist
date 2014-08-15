@@ -33,7 +33,7 @@ Paste the token in the settings section under the token option.
 
 Here's a command you can run from your terminal to generate a token via curl:
 
-    curl -v -u USERNAME -X POST https://api.github.com/authorizations --data "{\"scopes\":[\"gist\"]}"
+    curl -v -u USERNAME -X POST https://api.github.com/authorizations --data "{\"scopes\":[\"gist\"], \"note\": \"SublimeText 2/3 Gist plugin\"}"
 
 Where USERNAME is your Github username. Save the token generated and paste it in the settings section under the token option.
 
