@@ -118,12 +118,22 @@ def insert_gist(gist_url):
     gist = api_request(gist_url)
     files = sorted(gist['files'].keys())
 
+
     for gist_filename in files:
         view = sublime.active_window().active_view()
 
+        is_auto_indent = view.settings().get('auto_indent')
+
         if PY3:
-            view.run_command('insert', {
-                'characters': gist['files'][gist_filename]['content'],
+            if is_auto_indent == True:
+                view.settings().set('auto_indent',False)
+                view.run_command('insert', {
+                    'characters': gist['files'][gist_filename]['content'],
+                })
+                view.settings().set('auto_indent',True)
+            else:
+                view.run_command('insert', {
+                    'characters': gist['files'][gist_filename]['content'],
                 })
         else:
             edit = view.begin_edit()
