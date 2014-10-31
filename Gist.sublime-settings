@@ -44,5 +44,10 @@
     //"gist_prefix": "Snippet:",
 
     // Limit to gists with specific tag (#tag)
-    //"gist_tag": "snippet"
+    //"gist_tag": "snippet",
+    
+    // Sort gists context menu alphabetically by description or file extension
+    // Example: "description"
+    // Example: "ext", "extension"
+    // "sort_gists": "description"
 }

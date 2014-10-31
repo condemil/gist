@@ -19,7 +19,7 @@ Go to the "Packages" directory (`Preferences` / `Browse Packages…`). Then clon
 # Generating Access Token
 
 As of [2013-05-16](https://github.com/blog/1509-personal-api-tokens), you can generate API Access Tokens via the Web UI or via the GitHub API.
-**All other authorization methods is deprecated.**
+**All other authorization methods are deprecated.**
 
 ## Web
 * Account Settings -> [Applications](https://github.com/settings/applications)
@@ -70,6 +70,10 @@ Edit the settings file (it should open automatically the first time you use a Gi
 * `"save-update-hook": true`
 
     Set the on-save behaviour of a loaded Gist. True implies that when the Gist is saved, it'll update the online Gist. False implies that it'll bring up a save dialog for the Gist to be saved to disk.
+
+* `"sort_gists": description | ext`
+
+    You can set the context menu to sort alphabetically by either gist description or the first filename extension from the gist. Example: `"sort_gists": "description:"` or `"sort_gists": "ext:"`. 
 
 
 # Usage

@@ -52,6 +52,9 @@ def gist_title(gist):
 
 
 def gists_filter(all_gists):
+    
+    # Set variable for further reuse
+    sort_type = settings.get('sort_gists')
     prefix = settings.get('gist_prefix')
     if prefix:
         prefix_len = len(prefix)
@@ -63,8 +66,10 @@ def gists_filter(all_gists):
 
     gists = []
     gists_names = []
+    gists_filenames = []
 
     for gist in all_gists:
+
         name = gist_title(gist)
 
         if not gist['files']:
@@ -84,8 +89,28 @@ def gists_filter(all_gists):
             else:
                 continue
 
+        if sort_type:
+
+            # Set the extra data for sorting
+            sorted_data = set_sort_data(sort_type, gist, name)
+            
+            if not sorted_data is None:
+                gist = sorted_data[0]
+
+            if sort_type == 'extension' or sort_type == 'ext':
+                gists_filenames.append([sorted_data[1][0], sorted_data[1][1]])
+        
         gists.append(gist)
         gists_names.append(name)
+
+    # Sort block
+    if sort_type:
+
+        # Custom sort the data alphabetically
+        sorted_results = sort_gists_data(sort_type, gists, gists_names, gists_filenames)
+        gists          = sorted_results[0]
+        gists_names    = sorted_results[1]
+        
 
     return [gists, gists_names]
 
@@ -117,3 +142,47 @@ def set_syntax(view, file_data):
         view.set_syntax_file(new_syntax_path)
     except:
         pass
+
+def set_sort_data(sort_type, gist, name):
+    
+    # Set the gist description to the filename at element 0
+    # Same process that gist_title does for the title variable
+    if sort_type == 'description' and gist['description'] == "":
+        #print('Description')
+        gist['description'] = list(gist['files'].keys())[0]
+        return [gist]
+
+    # For sorting by extension lets add the extension to the gist list
+    if sort_type == 'extension' or sort_type == 'file extension' or sort_type == 'ext':
+        #print('Ext')
+        ext = list(gist['files'].keys())[0].split('.')
+        if 1 < len(ext):
+            gist['extension'] = ext[1]
+        else:
+            # This it to place gists without filenames at the end of the context list
+            gist['extension'] = '[No Filename]'
+
+        # Add to extensions name list
+        filename = [name[0], gist['extension']]
+        return [gist, filename]
+
+def sort_gists_data(sort_type, gists, gists_names, gists_filenames):
+
+    if sort_type == 'description':
+        #print('Debug: Sort by description')
+        
+        # Check for the filename to appear to determine how to sort
+        if not settings.get('prefer_filename'):
+            gists = sorted(gists, key=lambda k: k['description'].lower())
+        else:
+            gists = sorted(gists, key=lambda k: list(k['files'].keys())[0].lower())
+
+        gists_names = sorted(gists_names,key=lambda k: k[0].lower())
+        
+    elif sort_type == 'extension' or sort_type == 'ext':
+        #print('Sort by file extension')
+        
+        gists = sorted(gists, key=lambda k: (k['extension'] == "[No Filename]", k['extension'].lower()))
+        gists_names = sorted(gists_filenames, key=lambda k: (k[1] == "[No Filename]", k[1].lower()))
+
+    return [gists, gists_names]
