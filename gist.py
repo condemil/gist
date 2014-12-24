@@ -275,7 +275,7 @@ class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
         def on_gist_description(description):
             if description and description != self.gist_description():
                 gist_url = self.gist_url()
-                new_gist = update_gist(gist_url, {}, description)
+                new_gist = update_gist(gist_url, {}, new_description=description)
                 for window in sublime.windows():
                     for view in window.views():
                         if view.settings().get('gist_url') == gist_url:
