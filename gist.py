@@ -439,3 +439,22 @@ class GistAddFileCommand(GistListCommandBase, sublime_plugin.TextCommand):
 
     def get_window(self):
         return self.view.window()
+
+
+class GistCopyRawUrlCommand(GistListCommandBase, sublime_plugin.WindowCommand):
+    @catch_errors
+    def handle_gist(self, gist):
+        gist_files = [(g['filename'], g['raw_url']) for g in gist['files'].values()]
+
+        def on_file_selection(n):
+            print(gist_files[n])
+            sublime.set_clipboard(gist_files[n][1])
+            sublime.status_message('Copied "%s" to clipboard!' % gist_files[n][0])
+
+        if len(gist_files) == 1:
+            on_file_selection(0)
+        else:
+            self.get_window().show_quick_panel([g[0] for g in gist_files], on_file_selection)
+
+    def get_window(self):
+        return self.window
