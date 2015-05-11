@@ -447,7 +447,6 @@ class GistCopyRawUrlCommand(GistListCommandBase, sublime_plugin.WindowCommand):
         gist_files = [(g['filename'], g['raw_url']) for g in gist['files'].values()]
 
         def on_file_selection(n):
-            print(gist_files[n])
             sublime.set_clipboard(gist_files[n][1])
             sublime.status_message('Copied "%s" to clipboard!' % gist_files[n][0])
 
