@@ -3,8 +3,8 @@ PY3 = sys.version > '3'
 
 git_url = 'http://git.io/'
 caption = '[Enter a GitHub.com URL]  ' + b'\xe2\x96\x88'.decode('utf-8')
-url_msg = 'Git-io: Must be a GitHub.com URL.'
-err_msg = 'Git-io: Error contacting git.io'
+url_msg = 'Gist: Must be a GitHub.com URL.'
+err_msg = 'Gist: Error contacting git.io'
 
 def git_io(req_url):
     if PY3:
@@ -41,4 +41,4 @@ class GistGitioCommand(sublime_plugin.TextCommand):
             self.view.window().show_input_panel(caption, req_url, self.on_done, None, None)
         else:
             sublime.set_clipboard(short_url)
-            sublime.status_message('Git-io: Copied to Clipboard! ' + short_url)
+            sublime.status_message('Gist: Copied to Clipboard! ' + short_url)
