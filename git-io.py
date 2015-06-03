@@ -30,7 +30,7 @@ def git_io(req_url):
 
 import sublime, sublime_plugin
 
-class SublimeGitioCommand(sublime_plugin.TextCommand):
+class GistGitioCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         self.view.window().show_input_panel(caption, '', self.on_done, None, None)
 
