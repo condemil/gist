@@ -4,14 +4,11 @@ import os
 import sys
 import re
 
-PY3 = sys.version >= '3'
-#ST3 = sys.version >= '3'
-#ST3 = int(sublime.version()) >= 3000
+import sublime
 
-if PY3:
-    from .settings import *
-else:
-    from settings import *
+from .settings import settings
+
+PY3 = sys.version >= '3'
 
 
 def gistify_view(view, gist, gist_filename):
@@ -72,7 +69,7 @@ def gists_filter(all_gists):
 
         if prefix:
             if name[0][0:prefix_len] == prefix:
-                name[0] = name[0][prefix_len:] # remove prefix from name
+                name[0] = name[0][prefix_len:]  # remove prefix from name
             else:
                 continue
 
@@ -113,7 +110,6 @@ def set_syntax(view, file_data):
         new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
 
     try:
-        #print(new_syntax_path)
         view.set_syntax_file(new_syntax_path)
     except:
         pass

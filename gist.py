@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-
-import sublime
-import sublime_plugin
 import os
 import sys
 import json
@@ -12,16 +9,15 @@ import traceback
 import threading
 import shutil
 
-PY3 = sys.version > '3'
+import sublime
+import sublime_plugin
 
-if PY3:
-    from .request import *
-    from .settings import *
-    from .helpers import *
-else:
-    from request import *
-    from settings import *
-    from helpers import *
+from .request import api_request
+from .settings import settings
+from .exceptions import MissingCredentialsException
+from . import helpers
+
+PY3 = sys.version > '3'
 
 
 def plugin_loaded():
@@ -36,7 +32,8 @@ def catch_errors(fn):
         try:
             return fn(*args, **kwargs)
         except MissingCredentialsException:
-            sublime.error_message("Gist: GitHub token isn't provided in Gist.sublime-settings file. All other authorization methods is deprecated.")
+            sublime.error_message("Gist: GitHub token isn't provided in Gist.sublime-settings file. "
+                                  "All other authorization methods is deprecated.")
             user_settings_path = os.path.join(sublime.packages_path(), 'User', 'Gist.sublime-settings')
             if not os.path.exists(user_settings_path):
                 default_settings_path = os.path.join(sublime.packages_path(), 'Gist', 'Gist.sublime-settings')
@@ -71,7 +68,7 @@ def update_gist(gist_url, file_changes, auth_token=None, https_proxy=None, new_d
     result = api_request(gist_url, data, token=auth_token, https_proxy=https_proxy, method="PATCH")
 
     if PY3:
-        sublime.status_message("Gist updated") # can only be called by main thread in sublime text 2
+        sublime.status_message("Gist updated")  # can only be called by main thread in sublime text 2
 
     # print('Result:', result)
     return result
@@ -86,16 +83,16 @@ def open_gist(gist_url):
         allowedTypes = ['text', 'application']
         type = gist['files'][gist_filename]['type'].split('/')[0]
         if type not in allowedTypes:
-           continue
+            continue
 
         view = sublime.active_window().new_file()
 
-        gistify_view(view, gist, gist_filename)
+        helpers.gistify_view(view, gist, gist_filename)
 
         if PY3:
             view.run_command('append', {
                 'characters': gist['files'][gist_filename]['content'],
-                })
+            })
         else:
             edit = view.begin_edit()
             view.insert(edit, 0, gist['files'][gist_filename]['content'])
@@ -111,13 +108,12 @@ def open_gist(gist_url):
             view.settings().set('do-update', False)
             view.run_command('save')
 
-        set_syntax(view, gist['files'][gist_filename])
+        helpers.set_syntax(view, gist['files'][gist_filename])
 
 
 def insert_gist(gist_url):
     gist = api_request(gist_url)
     files = sorted(gist['files'].keys())
-
 
     for gist_filename in files:
         view = sublime.active_window().active_view()
@@ -125,12 +121,12 @@ def insert_gist(gist_url):
         is_auto_indent = view.settings().get('auto_indent')
 
         if PY3:
-            if is_auto_indent == True:
-                view.settings().set('auto_indent',False)
+            if is_auto_indent:
+                view.settings().set('auto_indent', False)
                 view.run_command('insert', {
                     'characters': gist['files'][gist_filename]['content'],
                 })
-                view.settings().set('auto_indent',True)
+                view.settings().set('auto_indent', True)
             else:
                 view.run_command('insert', {
                     'characters': gist['files'][gist_filename]['content'],
@@ -143,6 +139,7 @@ def insert_gist(gist_url):
 
             view.end_edit(edit)
 
+
 def insert_gist_embed(gist_url):
     gist = api_request(gist_url)
     files = sorted(gist['files'].keys())
@@ -154,7 +151,7 @@ def insert_gist_embed(gist_url):
         if PY3:
             view.run_command('insert', {
                 'characters': template,
-                })
+            })
         else:
             edit = view.begin_edit()
 
@@ -190,7 +187,8 @@ class GistCommand(sublime_plugin.TextCommand):
             @catch_errors
             def on_gist_filename(filename):
                 # We need to figure out the filenames. Right now, the following logic is used:
-                #   If there's only 1 selection, just pass whatever the user typed to Github. It'll rename empty files for us.
+                #   If there's only 1 selection, just pass whatever the user typed to Github.
+                #       It'll rename empty files for us.
                 #   If there are multiple selections and user entered a filename, rename the files from foo.js to
                 #       foo (1).js, foo (2).js, etc.
                 #   If there are multiple selections and user didn't enter anything, post the files as
@@ -216,8 +214,8 @@ class GistCommand(sublime_plugin.TextCommand):
                 sublime.status_message("%s Gist: %s" % (self.mode(), gist_html_url))
 
                 if gistify:
-                    gistify_view(self.view, gist, list(gist['files'].keys())[0])
-                # else:
+                    helpers.gistify_view(self.view, gist, list(gist['files'].keys())[0])
+                    # else:
                     # open_gist(gist['url'])
 
             window.show_input_panel('Gist File Name: (optional):', filename, on_gist_filename, None, None)
@@ -227,6 +225,7 @@ class GistCommand(sublime_plugin.TextCommand):
 
 class GistViewCommand(object):
     """A base class for commands operating on a gistified view"""
+
     def is_enabled(self):
         return self.gist_url() is not None
 
@@ -263,7 +262,7 @@ class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
                 text = self.view.substr(sublime.Region(0, self.view.size()))
                 file_changes = {old_filename: {'filename': filename, 'content': text}}
                 new_gist = update_gist(self.gist_url(), file_changes)
-                gistify_view(self.view, new_gist, filename)
+                helpers.gistify_view(self.view, new_gist, filename)
                 sublime.status_message('Gist file renamed')
 
         self.view.window().show_input_panel('New File Name:', old_filename, on_filename, None, None)
@@ -279,10 +278,11 @@ class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
                 for window in sublime.windows():
                     for view in window.views():
                         if view.settings().get('gist_url') == gist_url:
-                            gistify_view(view, new_gist, view.settings().get('gist_filename'))
+                            helpers.gistify_view(view, new_gist, view.settings().get('gist_filename'))
                 sublime.status_message('Gist description changed')
 
-        self.view.window().show_input_panel('New Description:', self.gist_description() or '', on_gist_description, None, None)
+        self.view.window().show_input_panel('New Description:', self.gist_description() or '', on_gist_description,
+                                            None, None)
 
 
 class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
@@ -299,7 +299,7 @@ class GistDeleteFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
         changes = {self.gist_filename(): None}
         update_gist(self.gist_url(), changes)
-        ungistify_view(self.view)
+        helpers.ungistify_view(self.view)
         sublime.status_message("Gist file deleted")
 
 
@@ -311,7 +311,7 @@ class GistDeleteCommand(GistViewCommand, sublime_plugin.TextCommand):
         for window in sublime.windows():
             for view in window.views():
                 if view.settings().get("gist_url") == gist_url:
-                    ungistify_view(view)
+                    helpers.ungistify_view(view)
         sublime.status_message("Gist deleted")
 
 
@@ -324,8 +324,8 @@ class GistListCommandBase(object):
 
     @catch_errors
     def run(self, *args):
-        filtered = gists_filter(api_request(settings.GISTS_URL))
-        filtered_stars = gists_filter(api_request(settings.STARRED_GISTS_URL))
+        filtered = helpers.gists_filter(api_request(settings.GISTS_URL))
+        filtered_stars = helpers.gists_filter(api_request(settings.STARRED_GISTS_URL))
 
         self.gists = filtered[0] + filtered_stars[0]
         gist_names = filtered[1] + list(map(lambda x: [u"★ " + x[0]], filtered_stars[1]))
@@ -335,7 +335,7 @@ class GistListCommandBase(object):
             gist_names = [["> " + user] for user in self.users] + gist_names
 
         if settings.get('include_orgs'):
-            if settings.get('include_orgs') == True:
+            if settings.get('include_orgs'):
                 self.orgs = [org.get("login") for org in api_request(settings.ORGS_URL)]
             else:
                 self.orgs = settings.get('include_orgs')
@@ -357,7 +357,7 @@ class GistListCommandBase(object):
                 for member in members:
                     self.gists += api_request(settings.USER_GISTS_URL % member)
 
-                filtered = gists_filter(self.gists)
+                filtered = helpers.gists_filter(self.gists)
                 self.gists = filtered[0]
                 gist_names = filtered[1]
                 # print(gist_names)
@@ -365,7 +365,7 @@ class GistListCommandBase(object):
                 self.orgs = self.users = []
                 self.get_window().show_quick_panel(gist_names, on_gist_num)
             elif num < offUsers:
-                filtered = gists_filter(api_request(settings.USER_GISTS_URL % self.users[num - offOrgs]))
+                filtered = helpers.gists_filter(api_request(settings.USER_GISTS_URL % self.users[num - offOrgs]))
                 self.gists = filtered[0]
                 gist_names = filtered[1]
                 # print(gist_names)
@@ -390,17 +390,18 @@ class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
 class GistListener(GistViewCommand, sublime_plugin.EventListener):
     @catch_errors
     def on_pre_save(self, view):
-        if view.settings().get('gist_filename') != None:
+        if view.settings().get('gist_filename') is not None:
             if settings.get('save-update-hook'):
                 # we ignore the first update, it happens upon loading a gist
                 if not view.settings().get('do-update'):
-                   view.settings().set('do-update', True)
-                   return
+                    view.settings().set('do-update', True)
+                    return
                 text = view.substr(sublime.Region(0, view.size()))
                 changes = {view.settings().get('gist_filename'): {'content': text}}
                 gist_url = view.settings().get('gist_url')
                 # Start update_gist in a thread so we don't stall the save
-                threading.Thread(target=update_gist, args=(gist_url, changes, settings.get('token'), settings.get('https_proxy'))).start()
+                threading.Thread(target=update_gist,
+                                 args=(gist_url, changes, settings.get('token'), settings.get('https_proxy'))).start()
 
 
 class InsertGistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
@@ -410,6 +411,7 @@ class InsertGistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
 
     def get_window(self):
         return self.window
+
 
 class InsertGistEmbedListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
     @catch_errors
@@ -431,7 +433,7 @@ class GistAddFileCommand(GistListCommandBase, sublime_plugin.TextCommand):
                 text = self.view.substr(sublime.Region(0, self.view.size()))
                 changes = {filename: {'content': text}}
                 new_gist = update_gist(gist['url'], changes)
-                gistify_view(self.view, new_gist, filename)
+                helpers.gistify_view(self.view, new_gist, filename)
                 sublime.status_message("File added to Gist")
 
         filename = os.path.basename(self.view.file_name() if self.view.file_name() else '')
