@@ -10,3 +10,6 @@
 
 # Ignore Mac Desktop Services files
 .DS_Store
+
+# Ignore Pycharm's and IDEA's service directory
+.idea/
