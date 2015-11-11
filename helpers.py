@@ -88,7 +88,7 @@ def gists_filter(all_gists):
 
 
 def set_syntax(view, file_data):
-    if not "language" in file_data:
+    if "language" not in file_data:
         return
 
     language = file_data['language']
