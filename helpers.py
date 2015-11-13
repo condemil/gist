@@ -9,9 +9,9 @@ PY3 = sys.version >= '3'
 #ST3 = int(sublime.version()) >= 3000
 
 if PY3:
-    from .settings import *
+    from . import settings
 else:
-    from settings import *
+    import settings
 
 
 def gistify_view(view, gist, gist_filename):
