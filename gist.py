@@ -36,7 +36,7 @@ def catch_errors(fn):
         try:
             return fn(*args, **kwargs)
         except MissingCredentialsException:
-            sublime.error_message("Gist: GitHub token isn't provided in Gist.sublime-settings file. All other authorization methods is deprecated.")
+            sublime.error_message("Gist: GitHub token isn't provided in Gist.sublime-settings file. All other authorization methods are deprecated.")
             user_settings_path = os.path.join(sublime.packages_path(), 'User', 'Gist.sublime-settings')
             if not os.path.exists(user_settings_path):
                 default_settings_path = os.path.join(sublime.packages_path(), 'Gist', 'Gist.sublime-settings')
