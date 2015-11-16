@@ -20,6 +20,10 @@
         "command": "insert_gist_embed_list"
     },
     {
+        "caption": "Gist: Copy Raw Gist URL",
+        "command": "gist_copy_raw_url"
+    },
+    {
         "caption": "Gist: Add File to Gist",
         "command": "gist_add_file"
     },

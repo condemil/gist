@@ -16,6 +16,7 @@
                     { "command": "gist_list", "caption": "Open Gist…" },
                     { "command": "insert_gist_list", "caption": "Insert Gist…" },
                     { "command": "insert_gist_embed_list", "caption": "Embed Gist as script" },
+                    { "command": "gist_copy_raw_url", "caption": "Copy Raw Gist URL…" },
                     { "command": "gist_add_file", "caption": "Add File to Gist…" },
                     { "caption": "-" },
                     { "command": "gist_copy_url", "caption": "Copy Gist URL" },
