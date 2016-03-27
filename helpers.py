@@ -1,7 +1,7 @@
 import os
 import re
 
-from .settings import *
+import sublime
 
 
 def gistify_view(view, gist, gist_filename):
@@ -28,6 +28,7 @@ def ungistify_view(view):
 
 
 def gist_title(gist):
+    settings = sublime.load_settings('Gist.sublime-settings')
     description = gist.get('description')
 
     if description and settings.get('prefer_filename') is False:
@@ -42,6 +43,7 @@ def gist_title(gist):
 
 
 def gists_filter(all_gists):
+    settings = sublime.load_settings('Gist.sublime-settings')
     prefix = settings.get('gist_prefix')
     if prefix:
         prefix_len = len(prefix)

@@ -3,7 +3,6 @@ import json
 
 import sublime
 import urllib.request as urllib
-from .settings import *
 
 
 class SimpleHTTPError(Exception):
@@ -27,6 +26,7 @@ def token_auth_string():
 
 
 def api_request(url, data=None, token=None, https_proxy=None, method=None):
+    settings = sublime.load_settings('Gist.sublime-settings')
     request = urllib.Request(url)
     # print('API request url:', request.get_full_url())
     if method:

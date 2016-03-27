@@ -11,14 +11,26 @@ import threading
 import shutil
 
 from .request import *
-from .settings import *
 from .helpers import *
+settings = None
 
 
 def plugin_loaded():
-    settings.loaded_settings = sublime.load_settings('Gist.sublime-settings')
-    settings.get = settings.loaded_settings.get
-    settings.set = settings.loaded_settings.set
+    global settings
+    settings = sublime.load_settings('Gist.sublime-settings')
+
+    if settings.get('max_gists') > 100:
+        settings.set('max_gists', 100)  # the URLs are not updated.
+        sublime.status_message("Gist: GitHub API does not support a value of higher than 100")
+
+    MAX_GISTS = '?per_page=%d' % settings.get('max_gists')
+
+    api_url = settings.get('api_url')  # Should add validation?
+    settings.set('GISTS_URL', api_url + '/gists' + MAX_GISTS)
+    settings.set('USER_GISTS_URL', api_url + '/users/%s/gists' + MAX_GISTS)
+    settings.set('STARRED_GISTS_URL', api_url + '/gists/starred' + MAX_GISTS)
+    settings.set('ORGS_URL', api_url + '/user/orgs')
+    settings.set('ORG_MEMBERS_URL', api_url + '/orgs/%s/members')
 
 
 def catch_errors(fn):
@@ -48,7 +60,7 @@ def create_gist(public, description, files):
 
     file_data = dict((filename, {'content': text}) for filename, text in list(files.items()))
     data = json.dumps({'description': description, 'public': public, 'files': file_data})
-    gist = api_request(settings.GISTS_URL, data)
+    gist = api_request(settings.get('GISTS_URL'), data)
     return gist
 
 
@@ -296,8 +308,8 @@ class GistListCommandBase(object):
 
     @catch_errors
     def run(self, *args):
-        filtered = gists_filter(api_request(settings.GISTS_URL))
-        filtered_stars = gists_filter(api_request(settings.STARRED_GISTS_URL))
+        filtered = gists_filter(api_request(settings.get('GISTS_URL')))
+        filtered_stars = gists_filter(api_request(settings.get('STARRED_GISTS_URL')))
 
         self.gists = filtered[0] + filtered_stars[0]
         gist_names = filtered[1] + list(map(lambda x: [u"★ " + x[0]], filtered_stars[1]))
@@ -307,8 +319,8 @@ class GistListCommandBase(object):
             gist_names = [["> " + user] for user in self.users] + gist_names
 
         if settings.get('include_orgs'):
-            if settings.get('include_orgs') == True:
-                self.orgs = [org.get("login") for org in api_request(settings.ORGS_URL)]
+            if settings.get('include_orgs'):
+                self.orgs = [org.get("login") for org in api_request(settings.get('ORGS_URL'))]
             else:
                 self.orgs = settings.get('include_orgs')
 
@@ -325,9 +337,9 @@ class GistListCommandBase(object):
             elif num < offOrgs:
                 self.gists = []
 
-                members = [member.get("login") for member in api_request(settings.ORG_MEMBERS_URL % self.orgs[num])]
+                members = [member.get("login") for member in api_request(settings.get('ORG_MEMBERS_URL') % self.orgs[num])]
                 for member in members:
-                    self.gists += api_request(settings.USER_GISTS_URL % member)
+                    self.gists += api_request(settings.get('USER_GISTS_URL') % member)
 
                 filtered = gists_filter(self.gists)
                 self.gists = filtered[0]
@@ -337,7 +349,7 @@ class GistListCommandBase(object):
                 self.orgs = self.users = []
                 self.get_window().show_quick_panel(gist_names, on_gist_num)
             elif num < offUsers:
-                filtered = gists_filter(api_request(settings.USER_GISTS_URL % self.users[num - offOrgs]))
+                filtered = gists_filter(api_request(settings.get('USER_GISTS_URL') % self.users[num - offOrgs]))
                 self.gists = filtered[0]
                 gist_names = filtered[1]
                 # print(gist_names)
