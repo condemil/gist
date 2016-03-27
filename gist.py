@@ -39,7 +39,8 @@ def catch_errors(fn):
         try:
             return fn(*args, **kwargs)
         except MissingCredentialsException:
-            sublime.error_message("Gist: GitHub token isn't provided in Gist.sublime-settings file. All other authorization methods are deprecated.")
+            sublime.error_message("Gist: GitHub token isn't provided in Gist.sublime-settings file. "
+                                  "All other authorization methods are deprecated.")
             user_settings_path = os.path.join(sublime.packages_path(), 'User', 'Gist.sublime-settings')
             if not os.path.exists(user_settings_path):
                 default_settings_path = os.path.join(sublime.packages_path(), 'Gist', 'Gist.sublime-settings')
@@ -88,17 +89,15 @@ def open_gist(gist_url):
         allowedTypes = ['text', 'application']
         type = gist['files'][gist_filename]['type'].split('/')[0]
         if type not in allowedTypes:
-           continue
+            continue
 
         view = sublime.active_window().new_file()
 
         gistify_view(view, gist, gist_filename)
 
-
         view.run_command('append', {
-                'characters': gist['files'][gist_filename]['content'],
-                })
-
+            'characters': gist['files'][gist_filename]['content'],
+        })
 
         if settings.get('supress_save_dialog'):
             view.set_scratch(True)
@@ -123,15 +122,15 @@ def insert_gist(gist_url):
         is_auto_indent = view.settings().get('auto_indent')
 
         if is_auto_indent:
-                view.settings().set('auto_indent',False)
-                view.run_command('insert', {
-                    'characters': gist['files'][gist_filename]['content'],
-                })
-                view.settings().set('auto_indent',True)
+            view.settings().set('auto_indent', False)
+            view.run_command('insert', {
+                'characters': gist['files'][gist_filename]['content'],
+            })
+            view.settings().set('auto_indent', True)
         else:
-                view.run_command('insert', {
-                    'characters': gist['files'][gist_filename]['content'],
-                })
+            view.run_command('insert', {
+                'characters': gist['files'][gist_filename]['content'],
+            })
 
 
 def insert_gist_embed(gist_url):
@@ -144,8 +143,8 @@ def insert_gist_embed(gist_url):
         template = '<script src="{0}"></script>'.format(gist['files'][gist_filename]['raw_url'])
 
         view.run_command('insert', {
-                'characters': template,
-                })
+            'characters': template,
+        })
 
 
 class GistCommand(sublime_plugin.TextCommand):
@@ -174,7 +173,8 @@ class GistCommand(sublime_plugin.TextCommand):
             @catch_errors
             def on_gist_filename(filename):
                 # We need to figure out the filenames. Right now, the following logic is used:
-                #   If there's only 1 selection, just pass whatever the user typed to Github. It'll rename empty files for us.
+                #   If there's only 1 selection, just pass whatever the user typed to Github.
+                #       It'll rename empty files for us.
                 #   If there are multiple selections and user entered a filename, rename the files from foo.js to
                 #       foo (1).js, foo (2).js, etc.
                 #   If there are multiple selections and user didn't enter anything, post the files as
@@ -211,6 +211,7 @@ class GistCommand(sublime_plugin.TextCommand):
 
 class GistViewCommand(object):
     """A base class for commands operating on a gistified view"""
+
     def is_enabled(self):
         return self.gist_url() is not None
 
@@ -266,7 +267,8 @@ class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
                             gistify_view(view, new_gist, view.settings().get('gist_filename'))
                 sublime.status_message('Gist description changed')
 
-        self.view.window().show_input_panel('New Description:', self.gist_description() or '', on_gist_description, None, None)
+        self.view.window().show_input_panel('New Description:', self.gist_description() or '',
+                                            on_gist_description, None, None)
 
 
 class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
@@ -337,7 +339,8 @@ class GistListCommandBase(object):
             elif num < offOrgs:
                 self.gists = []
 
-                members = [member.get("login") for member in api_request(settings.get('ORG_MEMBERS_URL') % self.orgs[num])]
+                members = [member.get("login") for member in
+                           api_request(settings.get('ORG_MEMBERS_URL') % self.orgs[num])]
                 for member in members:
                     self.gists += api_request(settings.get('USER_GISTS_URL') % member)
 
@@ -374,17 +377,19 @@ class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
 class GistListener(GistViewCommand, sublime_plugin.EventListener):
     @catch_errors
     def on_pre_save(self, view):
-        if view.settings().get('gist_filename') != None:
+        if view.settings().get('gist_filename') is not None:
             if settings.get('save-update-hook'):
                 # we ignore the first update, it happens upon loading a gist
                 if not view.settings().get('do-update'):
-                   view.settings().set('do-update', True)
-                   return
+                    view.settings().set('do-update', True)
+                    return
                 text = view.substr(sublime.Region(0, view.size()))
                 changes = {view.settings().get('gist_filename'): {'content': text}}
                 gist_url = view.settings().get('gist_url')
                 # Start update_gist in a thread so we don't stall the save
-                threading.Thread(target=update_gist, args=(gist_url, changes, settings.get('token'), settings.get('https_proxy'))).start()
+                threading.Thread(target=update_gist,
+                                 args=(gist_url, changes, settings.get('token'), settings.get('https_proxy'))
+                                 ).start()
 
 
 class InsertGistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
@@ -394,6 +399,7 @@ class InsertGistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
 
     def get_window(self):
         return self.window
+
 
 class InsertGistEmbedListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
     @catch_errors

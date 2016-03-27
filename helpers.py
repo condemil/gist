@@ -64,7 +64,7 @@ def gists_filter(all_gists):
 
         if prefix:
             if name[0][0:prefix_len] == prefix:
-                name[0] = name[0][prefix_len:] # remove prefix from name
+                name[0] = name[0][prefix_len:]  # remove prefix from name
             else:
                 continue
 
@@ -83,7 +83,7 @@ def gists_filter(all_gists):
 
 
 def set_syntax(view, file_data):
-    if not "language" in file_data:
+    if "language" not in file_data:
         return
 
     language = file_data['language']
@@ -102,7 +102,7 @@ def set_syntax(view, file_data):
         new_syntax_path = new_syntax_path.replace('\\', '/')
 
     try:
-        #print(new_syntax_path)
+        # print(new_syntax_path)
         view.set_syntax_file(new_syntax_path)
     except:
         pass
