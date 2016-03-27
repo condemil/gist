@@ -1,17 +1,17 @@
+import functools
+import json
+import os
+import shutil
+import tempfile
+import threading
+import traceback
+import webbrowser
+
 import sublime
 import sublime_plugin
-import os
-import sys
-import json
-import functools
-import webbrowser
-import tempfile
-import traceback
-import threading
-import shutil
+from .helpers import gistify_view, set_syntax, gists_filter, ungistify_view
+from .request import api_request, MissingCredentialsException
 
-from .request import *
-from .helpers import *
 settings = None
 
 
