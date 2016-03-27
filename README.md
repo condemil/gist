@@ -51,13 +51,9 @@ Edit the settings file (it should open automatically the first time you use a Gi
     You can enter https proxy here
     Format: "http://user:pass@proxy:port"
 
-*   `"enterprise": false`
+*   `"api_url": ""`
 
-    Set this to true if you want to use a enterprise version of github instead of github.com
-
-*   `"url": ""`
-
-    Set the url of the enterprise version of github you want to use. Leave this blank if the enterprise option is set to false.
+    Set the url of the enterprise version of github you want to use. Defaults to github.com
 
 *   `"max_gists": 100`
 
