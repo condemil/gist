@@ -1,22 +1,9 @@
-# -*- coding: utf-8 -*-
+import contextlib
+import json
 
 import sublime
-import os
-import sys
-import json
-import contextlib
-import traceback
-import subprocess
-import tempfile
-
-PY3 = sys.version > '3'
-
-if PY3:
-    import urllib.request as urllib
-    from .settings import *
-else:
-    import urllib2 as urllib
-    from settings import *
+import urllib.request as urllib
+from .settings import *
 
 
 class SimpleHTTPError(Exception):

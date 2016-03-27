@@ -1,17 +1,7 @@
-# -*- coding: utf-8 -*-
-
 import os
-import sys
 import re
 
-PY3 = sys.version >= '3'
-#ST3 = sys.version >= '3'
-#ST3 = int(sublime.version()) >= 3000
-
-if PY3:
-    from .settings import *
-else:
-    from settings import *
+from .settings import *
 
 
 def gistify_view(view, gist, gist_filename):
@@ -104,13 +94,10 @@ def set_syntax(view, file_data):
     else:
         new_syntax = os.path.join(language, "{0}.tmLanguage".format(language))
 
-    if PY3:
-        new_syntax_path = os.path.join('Packages', new_syntax)
+    new_syntax_path = os.path.join('Packages', new_syntax)
 
-        if os.name == 'nt':
-            new_syntax_path = new_syntax_path.replace('\\', '/')
-    else:
-        new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
+    if os.name == 'nt':
+        new_syntax_path = new_syntax_path.replace('\\', '/')
 
     try:
         #print(new_syntax_path)

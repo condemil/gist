@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import sublime
 import sublime_plugin
 import os
@@ -12,16 +10,9 @@ import traceback
 import threading
 import shutil
 
-PY3 = sys.version > '3'
-
-if PY3:
-    from .request import *
-    from .settings import *
-    from .helpers import *
-else:
-    from request import *
-    from settings import *
-    from helpers import *
+from .request import *
+from .settings import *
+from .helpers import *
 
 
 def plugin_loaded():
@@ -70,8 +61,7 @@ def update_gist(gist_url, file_changes, auth_token=None, https_proxy=None, new_d
     # print('Data:', data)
     result = api_request(gist_url, data, token=auth_token, https_proxy=https_proxy, method="PATCH")
 
-    if PY3:
-        sublime.status_message("Gist updated") # can only be called by main thread in sublime text 2
+    sublime.status_message("Gist updated")
 
     # print('Result:', result)
     return result
@@ -92,14 +82,11 @@ def open_gist(gist_url):
 
         gistify_view(view, gist, gist_filename)
 
-        if PY3:
-            view.run_command('append', {
+
+        view.run_command('append', {
                 'characters': gist['files'][gist_filename]['content'],
                 })
-        else:
-            edit = view.begin_edit()
-            view.insert(edit, 0, gist['files'][gist_filename]['content'])
-            view.end_edit(edit)
+
 
         if settings.get('supress_save_dialog'):
             view.set_scratch(True)
@@ -118,30 +105,22 @@ def insert_gist(gist_url):
     gist = api_request(gist_url)
     files = sorted(gist['files'].keys())
 
-
     for gist_filename in files:
         view = sublime.active_window().active_view()
 
         is_auto_indent = view.settings().get('auto_indent')
 
-        if PY3:
-            if is_auto_indent == True:
+        if is_auto_indent:
                 view.settings().set('auto_indent',False)
                 view.run_command('insert', {
                     'characters': gist['files'][gist_filename]['content'],
                 })
                 view.settings().set('auto_indent',True)
-            else:
+        else:
                 view.run_command('insert', {
                     'characters': gist['files'][gist_filename]['content'],
                 })
-        else:
-            edit = view.begin_edit()
 
-            for region in view.sel():
-                view.replace(edit, region, gist['files'][gist_filename]['content'])
-
-            view.end_edit(edit)
 
 def insert_gist_embed(gist_url):
     gist = api_request(gist_url)
@@ -151,17 +130,10 @@ def insert_gist_embed(gist_url):
         view = sublime.active_window().active_view()
 
         template = '<script src="{0}"></script>'.format(gist['files'][gist_filename]['raw_url'])
-        if PY3:
-            view.run_command('insert', {
+
+        view.run_command('insert', {
                 'characters': template,
                 })
-        else:
-            edit = view.begin_edit()
-
-            for region in view.sel():
-                view.replace(edit, region, template)
-
-            view.end_edit(edit)
 
 
 class GistCommand(sublime_plugin.TextCommand):
