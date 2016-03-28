@@ -37,7 +37,7 @@ def gist_title(gist):
         title = list(gist['files'].keys())[0]
 
     if settings.get('show_authors'):
-        return [title, gist.get('user').get('login')]
+        return [title, gist.get('owner').get('login')]
     else:
         return [title]
 
