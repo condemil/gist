@@ -50,5 +50,9 @@
     {
         "caption": "Gist: Delete Gist",
         "command": "gist_delete"
+    },
+    {
+        "caption": "Gist: Shorten a GitHub.com URL",
+        "command": "gist_gitio"
     }
 ]

@@ -4,5 +4,6 @@
 	{ "keys": ["super+k", "super+s"], "command": "gist_update_file" },
 	{ "keys": ["super+k", "super+o"], "command": "gist_list" },
 	{ "keys": ["super+k", "super+["], "command": "insert_gist_list" },
-	{ "keys": ["super+k", "super+]"], "command": "gist_add_file" }
+	{ "keys": ["super+k", "super+]"], "command": "gist_add_file" },
+	{ "keys": ["super+k", "super+g"], "command": "gist_gitio" }
 ]
