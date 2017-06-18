@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-import sublime
 import os
 import sys
 import json
@@ -9,24 +7,17 @@ import traceback
 import subprocess
 import tempfile
 
+import sublime
+
+from .settings import settings
+from .exceptions import MissingCredentialsException, SimpleHTTPError
+
 PY3 = sys.version > '3'
 
 if PY3:
     import urllib.request as urllib
-    from .settings import *
 else:
     import urllib2 as urllib
-    from settings import *
-
-
-class SimpleHTTPError(Exception):
-    def __init__(self, code, response):
-        self.code = code
-        self.response = response
-
-
-class MissingCredentialsException(Exception):
-    pass
 
 
 def token_auth_string():
@@ -44,7 +35,7 @@ def api_request_native(url, data=None, token=None, https_proxy=None, method=None
     # print('API request url:', request.get_full_url())
     if method:
         request.get_method = lambda: method
-    token = token if token != None else token_auth_string()
+    token = token if token is not None else token_auth_string()
     request.add_header('Authorization', 'token ' + token)
     request.add_header('Accept', 'application/json')
     request.add_header('Content-Type', 'application/json')
@@ -54,7 +45,7 @@ def api_request_native(url, data=None, token=None, https_proxy=None, method=None
 
     # print('API request data:', request.get_data())
     # print('API request header:', request.header_items())
-    https_proxy = https_proxy if https_proxy != None else settings.get('https_proxy')
+    https_proxy = https_proxy if https_proxy is not None else settings.get('https_proxy')
     if https_proxy:
         opener = urllib.build_opener(urllib.HTTPHandler(), urllib.HTTPSHandler(),
                                      urllib.ProxyHandler({'https': https_proxy}))
@@ -85,7 +76,7 @@ def named_tempfile():
 
 def api_request_curl(url, data=None, token=None, https_proxy=None, method=None):
     command = ["curl", '-K', '-', url]
-    token = token if token != None else token_auth_string()
+    token = token if token is not None else token_auth_string()
     config = ['--header "Authorization: token ' + token + '"',
               '--header "Accept: application/json"',
               '--header "Content-Type: application/json"',
@@ -94,7 +85,7 @@ def api_request_curl(url, data=None, token=None, https_proxy=None, method=None):
     if method:
         config.append('--request "%s"' % method)
 
-    https_proxy = https_proxy if https_proxy != None else settings.get('https_proxy')
+    https_proxy = https_proxy if https_proxy is not None else settings.get('https_proxy')
     if https_proxy:
         config.append(https_proxy)
 
@@ -126,10 +117,9 @@ def api_request_curl(url, data=None, token=None, https_proxy=None, method=None):
                     raise SimpleHTTPError(responsecode, response)
 
 
-
 def api_request(url, data=None, token=None, https_proxy=None, method=None):
     try:
-        if ('ssl' not in sys.modules and os.name != 'nt'):
+        if 'ssl' not in sys.modules and os.name != 'nt':
             return api_request_curl(url, data, token, https_proxy, method)
         else:
             return api_request_native(url, data, token, https_proxy, method)
