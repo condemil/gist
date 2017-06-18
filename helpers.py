@@ -65,10 +65,10 @@ def gists_filter(all_gists):
     gists_names = []
 
     for gist in all_gists:
-        name = gist_title(gist)
-
         if not gist['files']:
             continue
+
+        name = gist_title(gist)
 
         if prefix:
             if name[0][0:prefix_len] == prefix:
