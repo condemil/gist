@@ -1,29 +1,38 @@
-# -*- coding: utf-8 -*-
-import os
-import sys
-import json
 import functools
-import webbrowser
-import tempfile
-import traceback
-import threading
+import json
+import os
 import shutil
+import tempfile
+import threading
+import traceback
+import webbrowser
 
 import sublime
 import sublime_plugin
 
 from .request import api_request
-from .settings import settings
 from .exceptions import MissingCredentialsException
 from . import helpers
 
-PY3 = sys.version > '3'
+settings = None
 
 
 def plugin_loaded():
-    settings.loaded_settings = sublime.load_settings('Gist.sublime-settings')
-    settings.get = settings.loaded_settings.get
-    settings.set = settings.loaded_settings.set
+    global settings
+    settings = sublime.load_settings('Gist.sublime-settings')
+
+    if settings.get('max_gists') > 100:
+        settings.set('max_gists', 100)  # the URLs are not updated.
+        sublime.status_message("Gist: GitHub API does not support a value of higher than 100")
+
+    MAX_GISTS = '?per_page=%d' % settings.get('max_gists')
+
+    api_url = settings.get('api_url')  # Should add validation?
+    settings.set('GISTS_URL', api_url + '/gists' + MAX_GISTS)
+    settings.set('USER_GISTS_URL', api_url + '/users/%s/gists' + MAX_GISTS)
+    settings.set('STARRED_GISTS_URL', api_url + '/gists/starred' + MAX_GISTS)
+    settings.set('ORGS_URL', api_url + '/user/orgs')
+    settings.set('ORG_MEMBERS_URL', api_url + '/orgs/%s/members')
 
 
 def catch_errors(fn):
@@ -54,7 +63,7 @@ def create_gist(public, description, files):
 
     file_data = dict((filename, {'content': text}) for filename, text in list(files.items()))
     data = json.dumps({'description': description, 'public': public, 'files': file_data})
-    gist = api_request(settings.GISTS_URL, data)
+    gist = api_request(settings.get('GISTS_URL'), data)
     return gist
 
 
@@ -67,8 +76,7 @@ def update_gist(gist_url, file_changes, auth_token=None, https_proxy=None, new_d
     # print('Data:', data)
     result = api_request(gist_url, data, token=auth_token, https_proxy=https_proxy, method="PATCH")
 
-    if PY3:
-        sublime.status_message("Gist updated")  # can only be called by main thread in sublime text 2
+    sublime.status_message("Gist updated")
 
     # print('Result:', result)
     return result
@@ -89,14 +97,9 @@ def open_gist(gist_url):
 
         helpers.gistify_view(view, gist, gist_filename)
 
-        if PY3:
-            view.run_command('append', {
-                'characters': gist['files'][gist_filename]['content'],
-            })
-        else:
-            edit = view.begin_edit()
-            view.insert(edit, 0, gist['files'][gist_filename]['content'])
-            view.end_edit(edit)
+        view.run_command('append', {
+            'characters': gist['files'][gist_filename]['content'],
+        })
 
         if settings.get('supress_save_dialog'):
             view.set_scratch(True)
@@ -120,24 +123,17 @@ def insert_gist(gist_url):
 
         is_auto_indent = view.settings().get('auto_indent')
 
-        if PY3:
-            if is_auto_indent:
-                view.settings().set('auto_indent', False)
-                view.run_command('insert', {
-                    'characters': gist['files'][gist_filename]['content'],
-                })
-                view.settings().set('auto_indent', True)
-            else:
-                view.run_command('insert', {
-                    'characters': gist['files'][gist_filename]['content'],
-                })
+        if is_auto_indent:
+            view.settings().set('auto_indent', False)
+            view.run_command('insert', {
+                'characters': gist['files'][gist_filename]['content'],
+            })
+            view.settings().set('auto_indent', True)
         else:
-            edit = view.begin_edit()
+            view.run_command('insert', {
+                'characters': gist['files'][gist_filename]['content'],
+            })
 
-            for region in view.sel():
-                view.replace(edit, region, gist['files'][gist_filename]['content'])
-
-            view.end_edit(edit)
 
 
 def insert_gist_embed(gist_url):
@@ -148,17 +144,10 @@ def insert_gist_embed(gist_url):
         view = sublime.active_window().active_view()
 
         template = '<script src="{0}"></script>'.format(gist['files'][gist_filename]['raw_url'])
-        if PY3:
-            view.run_command('insert', {
-                'characters': template,
-            })
-        else:
-            edit = view.begin_edit()
 
-            for region in view.sel():
-                view.replace(edit, region, template)
-
-            view.end_edit(edit)
+        view.run_command('insert', {
+            'characters': template,
+        })
 
 
 class GistCommand(sublime_plugin.TextCommand):
@@ -281,8 +270,8 @@ class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
                             helpers.gistify_view(view, new_gist, view.settings().get('gist_filename'))
                 sublime.status_message('Gist description changed')
 
-        self.view.window().show_input_panel('New Description:', self.gist_description() or '', on_gist_description,
-                                            None, None)
+        self.view.window().show_input_panel('New Description:', self.gist_description() or '',
+                                            on_gist_description, None, None)
 
 
 class GistUpdateFileCommand(GistViewCommand, sublime_plugin.TextCommand):
@@ -324,8 +313,8 @@ class GistListCommandBase(object):
 
     @catch_errors
     def run(self, *args):
-        filtered = helpers.gists_filter(api_request(settings.GISTS_URL))
-        filtered_stars = helpers.gists_filter(api_request(settings.STARRED_GISTS_URL))
+        filtered = helpers.gists_filter(api_request(settings.get('GISTS_URL')))
+        filtered_stars = helpers.gists_filter(api_request(ssettings.get('STARRED_GISTS_URL')))
 
         self.gists = filtered[0] + filtered_stars[0]
         gist_names = filtered[1] + list(map(lambda x: [u"★ " + x[0]], filtered_stars[1]))
@@ -336,7 +325,7 @@ class GistListCommandBase(object):
 
         if settings.get('include_orgs'):
             if settings.get('include_orgs'):
-                self.orgs = [org.get("login") for org in api_request(settings.ORGS_URL)]
+                self.orgs = [org.get("login") for org in api_request(settings.get('ORGS_URL'))]
             else:
                 self.orgs = settings.get('include_orgs')
 
@@ -353,9 +342,10 @@ class GistListCommandBase(object):
             elif num < offOrgs:
                 self.gists = []
 
-                members = [member.get("login") for member in api_request(settings.ORG_MEMBERS_URL % self.orgs[num])]
+                members = [member.get("login") for member in
+                           api_request(settings.get('ORG_MEMBERS_URL') % self.orgs[num])]
                 for member in members:
-                    self.gists += api_request(settings.USER_GISTS_URL % member)
+                    self.gists += api_request(settings.get('USER_GISTS_URL') % member)
 
                 filtered = helpers.gists_filter(self.gists)
                 self.gists = filtered[0]
@@ -365,7 +355,7 @@ class GistListCommandBase(object):
                 self.orgs = self.users = []
                 self.get_window().show_quick_panel(gist_names, on_gist_num)
             elif num < offUsers:
-                filtered = helpers.gists_filter(api_request(settings.USER_GISTS_URL % self.users[num - offOrgs]))
+                filtered = helpers.gists_filter(api_request(settings.get('USER_GISTS_URL') % self.users[num - offOrgs]))
                 self.gists = filtered[0]
                 gist_names = filtered[1]
                 # print(gist_names)
@@ -401,7 +391,8 @@ class GistListener(GistViewCommand, sublime_plugin.EventListener):
                 gist_url = view.settings().get('gist_url')
                 # Start update_gist in a thread so we don't stall the save
                 threading.Thread(target=update_gist,
-                                 args=(gist_url, changes, settings.get('token'), settings.get('https_proxy'))).start()
+                                 args=(gist_url, changes, settings.get('token'), settings.get('https_proxy'))
+                                 ).start()
 
 
 class InsertGistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):

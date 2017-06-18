@@ -1,14 +1,7 @@
-# -*- coding: utf-8 -*-
-
 import os
-import sys
 import re
 
 import sublime
-
-from .settings import settings
-
-PY3 = sys.version >= '3'
 
 
 def gistify_view(view, gist, gist_filename):
@@ -35,6 +28,7 @@ def ungistify_view(view):
 
 
 def gist_title(gist):
+    settings = sublime.load_settings('Gist.sublime-settings')
     description = gist.get('description')
 
     if description and settings.get('prefer_filename') is False:
@@ -43,12 +37,13 @@ def gist_title(gist):
         title = list(gist['files'].keys())[0]
 
     if settings.get('show_authors'):
-        return [title, gist.get('user').get('login')]
+        return [title, gist.get('owner').get('login')]
     else:
         return [title]
 
 
 def gists_filter(all_gists):
+    settings = sublime.load_settings('Gist.sublime-settings')
     prefix = settings.get('gist_prefix')
     if prefix:
         prefix_len = len(prefix)
@@ -62,10 +57,10 @@ def gists_filter(all_gists):
     gists_names = []
 
     for gist in all_gists:
+        name = gist_title(gist)
+
         if not gist['files']:
             continue
-
-        name = gist_title(gist)
 
         if prefix:
             if name[0][0:prefix_len] == prefix:
@@ -101,15 +96,13 @@ def set_syntax(view, file_data):
     else:
         new_syntax = os.path.join(language, "{0}.tmLanguage".format(language))
 
-    if PY3:
-        new_syntax_path = os.path.join('Packages', new_syntax)
+    new_syntax_path = os.path.join('Packages', new_syntax)
 
-        if os.name == 'nt':
-            new_syntax_path = new_syntax_path.replace('\\', '/')
-    else:
-        new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
+    if os.name == 'nt':
+        new_syntax_path = new_syntax_path.replace('\\', '/')
 
     try:
+        # print(new_syntax_path)
         view.set_syntax_file(new_syntax_path)
     except:
         pass
