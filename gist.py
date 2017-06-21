@@ -314,7 +314,7 @@ class GistListCommandBase(object):
     @catch_errors
     def run(self, *args):
         filtered = helpers.gists_filter(api_request(settings.get('GISTS_URL')))
-        filtered_stars = helpers.gists_filter(api_request(ssettings.get('STARRED_GISTS_URL')))
+        filtered_stars = helpers.gists_filter(api_request(settings.get('STARRED_GISTS_URL')))
 
         self.gists = filtered[0] + filtered_stars[0]
         gist_names = filtered[1] + list(map(lambda x: [u"★ " + x[0]], filtered_stars[1]))
