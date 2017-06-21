@@ -41,7 +41,7 @@ If OTP is enabled on your account, this will return 401 error code, use:
 
     curl -v -u USERNAME -H "X-GitHub-OTP: OTPCODE" -X POST https://api.github.com/authorizations --data "{\"scopes\":[\"gist\"], \"note\": \"SublimeText 2/3 Gist plugin\"}"
     
-Where OTPCODE is the code your quthenticator app shows you.
+Where OTPCODE is the code your authenticator app shows you.
 
 
 # Options
