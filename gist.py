@@ -16,18 +16,16 @@ PY3 = sys.version > '3'
 
 if PY3:
     from .request import *
-    from .settings import *
+    from . import settings
     from .helpers import *
 else:
     from request import *
-    from settings import *
+    import settings
     from helpers import *
 
 
 def plugin_loaded():
-    settings.loaded_settings = sublime.load_settings('Gist.sublime-settings')
-    settings.get = settings.loaded_settings.get
-    settings.set = settings.loaded_settings.set
+    settings.load()
 
 
 def catch_errors(fn):

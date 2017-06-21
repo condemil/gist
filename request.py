@@ -13,10 +13,10 @@ PY3 = sys.version > '3'
 
 if PY3:
     import urllib.request as urllib
-    from .settings import *
+    from . import settings
 else:
     import urllib2 as urllib
-    from settings import *
+    import settings
 
 
 class SimpleHTTPError(Exception):
