@@ -22,7 +22,7 @@ As of [2013-05-16](https://github.com/blog/1509-personal-api-tokens), you can ge
 **All other authorization methods is deprecated.**
 
 ## Web
-* Account Settings -> [Applications](https://github.com/settings/applications)
+* Account Settings -> [Personal access tokens](https://github.com/settings/tokens)
 * "Generate new token" under "Personal access tokens"
 * For "Token description" you should give it a meaningful name, Example: sublime gist
 * Under "Select scopes" you can just select gist
@@ -36,6 +36,12 @@ Here's a command you can run from your terminal to generate a token via curl:
     curl -v -u USERNAME -X POST https://api.github.com/authorizations --data "{\"scopes\":[\"gist\"], \"note\": \"SublimeText 2/3 Gist plugin\"}"
 
 Where USERNAME is your Github username. Save the token generated and paste it in the settings section under the token option.
+
+If OTP is enabled on your account, this will return 401 error code, use:
+
+    curl -v -u USERNAME -H "X-GitHub-OTP: OTPCODE" -X POST https://api.github.com/authorizations --data "{\"scopes\":[\"gist\"], \"note\": \"SublimeText 2/3 Gist plugin\"}"
+    
+Where OTPCODE is the code your quthenticator app shows you.
 
 
 # Options
