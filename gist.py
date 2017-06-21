@@ -20,17 +20,21 @@ settings = None
 def plugin_loaded():
     global settings
     settings = sublime.load_settings('Gist.sublime-settings')
+    settings.add_on_change('reload', set_settings)
+    set_settings()
 
+
+def set_settings():
     if settings.get('max_gists') > 100:
         settings.set('max_gists', 100)  # the URLs are not updated.
         sublime.status_message("Gist: GitHub API does not support a value of higher than 100")
 
-    MAX_GISTS = '?per_page=%d' % settings.get('max_gists')
+    url_args = '?per_page=%d' % settings.get('max_gists')
 
     api_url = settings.get('api_url')  # Should add validation?
-    settings.set('GISTS_URL', api_url + '/gists' + MAX_GISTS)
-    settings.set('USER_GISTS_URL', api_url + '/users/%s/gists' + MAX_GISTS)
-    settings.set('STARRED_GISTS_URL', api_url + '/gists/starred' + MAX_GISTS)
+    settings.set('GISTS_URL', api_url + '/gists' + url_args)
+    settings.set('USER_GISTS_URL', api_url + '/users/%s/gists' + url_args)
+    settings.set('STARRED_GISTS_URL', api_url + '/gists/starred' + url_args)
     settings.set('ORGS_URL', api_url + '/user/orgs')
     settings.set('ORG_MEMBERS_URL', api_url + '/orgs/%s/members')
 
