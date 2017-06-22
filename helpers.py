@@ -1,7 +1,10 @@
 import os
 import re
 
-import sublime
+try:
+    import sublime
+except ImportError:
+    from test.stubs import sublime
 
 
 def gistify_view(view, gist, gist_filename):
@@ -38,8 +41,8 @@ def gist_title(gist):
 
     if settings.get('show_authors'):
         return [title, gist.get('owner').get('login')]
-    else:
-        return [title]
+
+    return [title]
 
 
 def gists_filter(all_gists):
@@ -49,7 +52,7 @@ def gists_filter(all_gists):
         prefix_len = len(prefix)
 
     if settings.get('gist_tag'):
-        tag_prog = re.compile('(^|\s)#' + re.escape(settings.get('gist_tag')) + '($|\s)')
+        tag_prog = re.compile(r'(^|\s)#' + re.escape(settings.get('gist_tag')) + r'($|\s)')
     else:
         tag_prog = False
 
@@ -101,8 +104,4 @@ def set_syntax(view, file_data):
     if os.name == 'nt':
         new_syntax_path = new_syntax_path.replace('\\', '/')
 
-    try:
-        # print(new_syntax_path)
-        view.set_syntax_file(new_syntax_path)
-    except:
-        pass
+    view.set_syntax_file(new_syntax_path)

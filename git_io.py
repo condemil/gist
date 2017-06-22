@@ -23,14 +23,14 @@ def git_io(req_url):
             return None, 'https://git.io/{}'.format(body)
 
         return body, None
-    except HTTPError as ex:
-        return ex.read().decode(), None
+    except HTTPError as e:
+        return e.read().decode(), None
     except URLError:
         return 'Gist: Error contacting git.io', None
 
 
 class GistGitioCommand(sublime_plugin.TextCommand):
-    def run(self, edit):  # pylint: disable=unused-argument
+    def run(self, edit):
         self.view.window().show_input_panel(caption, '', self.on_done, None, None)
 
     def on_done(self, req_url):

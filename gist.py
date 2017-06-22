@@ -2,17 +2,24 @@ import functools
 import json
 import os
 import shutil
+import sys
 import tempfile
 import threading
 import traceback
 import webbrowser
 
-import sublime
-import sublime_plugin
+try:
+    import sublime
+    import sublime_plugin
+except ImportError:
+    from test.stubs import sublime
+    from test.stubs import sublime_plugin
 
-from .request import api_request
-from .exceptions import MissingCredentialsException
-from . import helpers
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+
+from exceptions import MissingCredentialsException
+import helpers
+from request import api_request
 
 settings = None
 
@@ -60,7 +67,7 @@ def catch_errors(fn):
 
 
 def create_gist(public, description, files):
-    for filename, text in list(files.items()):
+    for _, text in list(files.items()):
         if not text:
             sublime.error_message("Gist: Unable to create a Gist with empty content")
             return
@@ -88,13 +95,12 @@ def update_gist(gist_url, file_changes, auth_token=None, https_proxy=None, new_d
 
 def open_gist(gist_url):
     gist = api_request(gist_url)
-    # print('Gist:', gist)
     files = sorted(gist['files'].keys())
 
     for gist_filename in files:
-        allowedTypes = ['text', 'application']
-        type = gist['files'][gist_filename]['type'].split('/')[0]
-        if type not in allowedTypes:
+        allowed_types = ['text', 'application']
+        media_type = gist['files'][gist_filename]['type'].split('/')[0]
+        if media_type not in allowed_types:
             continue
 
         view = sublime.active_window().new_file()
@@ -139,7 +145,6 @@ def insert_gist(gist_url):
             })
 
 
-
 def insert_gist_embed(gist_url):
     gist = api_request(gist_url)
     files = sorted(gist['files'].keys())
@@ -164,7 +169,7 @@ class GistCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         regions = [region for region in self.view.sel() if not region.empty()]
 
-        if len(regions) == 0:
+        if regions:
             regions = [sublime.Region(0, self.view.size())]
             gistify = True
         else:
@@ -218,7 +223,6 @@ class GistCommand(sublime_plugin.TextCommand):
 
 class GistViewCommand(object):
     """A base class for commands operating on a gistified view"""
-
     def is_enabled(self):
         return self.gist_url() is not None
 
@@ -316,7 +320,7 @@ class GistListCommandBase(object):
     gists = orgs = users = []
 
     @catch_errors
-    def run(self, *args):
+    def run(self):
         filtered = helpers.gists_filter(api_request(settings.get('GISTS_URL')))
         filtered_stars = helpers.gists_filter(api_request(settings.get('STARRED_GISTS_URL')))
 
@@ -338,12 +342,12 @@ class GistListCommandBase(object):
         # print(gist_names)
 
         def on_gist_num(num):
-            offOrgs = len(self.orgs)
-            offUsers = offOrgs + len(self.users)
+            off_orgs = len(self.orgs)
+            off_users = off_orgs + len(self.users)
 
             if num < 0:
                 pass
-            elif num < offOrgs:
+            elif num < off_orgs:
                 self.gists = []
 
                 members = [member.get("login") for member in
@@ -358,8 +362,9 @@ class GistListCommandBase(object):
 
                 self.orgs = self.users = []
                 self.get_window().show_quick_panel(gist_names, on_gist_num)
-            elif num < offUsers:
-                filtered = helpers.gists_filter(api_request(settings.get('USER_GISTS_URL') % self.users[num - offOrgs]))
+            elif num < off_users:
+                filtered = helpers.gists_filter(
+                    api_request(settings.get('USER_GISTS_URL') % self.users[num - off_orgs]))
                 self.gists = filtered[0]
                 gist_names = filtered[1]
                 # print(gist_names)
@@ -367,9 +372,12 @@ class GistListCommandBase(object):
                 self.orgs = self.users = []
                 self.get_window().show_quick_panel(gist_names, on_gist_num)
             else:
-                self.handle_gist(self.gists[num - offUsers])
+                self.handle_gist(self.gists[num - off_users])
 
         self.get_window().show_quick_panel(gist_names, on_gist_num)
+
+    def handle_gist(self, gist):
+        raise NotImplementedError()
 
 
 class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
@@ -383,7 +391,7 @@ class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
 
 class GistListener(GistViewCommand, sublime_plugin.EventListener):
     @catch_errors
-    def on_pre_save(self, view):
+    def on_pre_save(self, view):  # pylint: disable=no-self-use
         if view.settings().get('gist_filename') is not None:
             if settings.get('save-update-hook'):
                 # we ignore the first update, it happens upon loading a gist
@@ -394,9 +402,9 @@ class GistListener(GistViewCommand, sublime_plugin.EventListener):
                 changes = {view.settings().get('gist_filename'): {'content': text}}
                 gist_url = view.settings().get('gist_url')
                 # Start update_gist in a thread so we don't stall the save
-                threading.Thread(target=update_gist,
-                                 args=(gist_url, changes, settings.get('token'), settings.get('https_proxy'))
-                                 ).start()
+                threading.Thread(
+                    target=update_gist, args=(gist_url, changes, settings.get('token'), settings.get('https_proxy'))
+                ).start()
 
 
 class InsertGistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):

@@ -3,6 +3,4 @@ class MissingCredentialsException(Exception):
 
 
 class SimpleHTTPError(Exception):
-    def __init__(self, code, response):
-        self.code = code
-        self.response = response
+    pass
