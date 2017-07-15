@@ -217,7 +217,7 @@ class GistCommand(sublime_plugin.TextCommand):
         window.show_input_panel("Gist Description (optional):", '', on_gist_description, None, None)
 
 
-class GistViewCommand(object):
+class GistViewCommand:
     """A base class for commands operating on a gistified view"""
     def is_enabled(self):
         return self.gist_url() is not None
@@ -313,7 +313,7 @@ class GistPrivateCommand(GistCommand):
     public = False
 
 
-class GistListCommandBase(object):
+class GistListCommandBase:
     """Base command to show list of gists and handle selected gist"""
     gists = orgs = users = []
 
