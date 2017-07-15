@@ -167,7 +167,7 @@ class GistCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         regions = [region for region in self.view.sel() if not region.empty()]
 
-        if regions:
+        if not regions:
             regions = [sublime.Region(0, self.view.size())]
             gistify = True
         else:
@@ -318,7 +318,7 @@ class GistListCommandBase:
     gists = orgs = users = []
 
     @catch_errors
-    def run(self):
+    def run(self, *args):  # TextCommand sends sublime.Edit object and WindowCommand is not
         filtered = helpers.gists_filter(api_request(settings.get('GISTS_URL')))
         filtered_stars = helpers.gists_filter(api_request(settings.get('STARRED_GISTS_URL')))
 
@@ -330,7 +330,7 @@ class GistListCommandBase:
             gist_names = [["> " + user] for user in self.users] + gist_names
 
         if settings.get('include_orgs'):
-            if settings.get('include_orgs'):
+            if settings.get('include_orgs') is True:
                 self.orgs = [org.get("login") for org in api_request(settings.get('ORGS_URL'))]
             else:
                 self.orgs = settings.get('include_orgs')
@@ -372,6 +372,9 @@ class GistListCommandBase:
         self.get_window().show_quick_panel(gist_names, on_gist_num)
 
     def handle_gist(self, gist):
+        raise NotImplementedError()
+
+    def get_window(self):
         raise NotImplementedError()
 
 
