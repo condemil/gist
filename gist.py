@@ -157,6 +157,7 @@ def insert_gist_embed(gist_url):
 
 
 class GistCommand(sublime_plugin.TextCommand):
+    """Creates public gist"""
     public = True
 
     def mode(self):
@@ -308,10 +309,12 @@ class GistDeleteCommand(GistViewCommand, sublime_plugin.TextCommand):
 
 
 class GistPrivateCommand(GistCommand):
+    """Creates private gist"""
     public = False
 
 
 class GistListCommandBase(object):
+    """Base command to show list of gists and handle selected gist"""
     gists = orgs = users = []
 
     @catch_errors
@@ -335,6 +338,7 @@ class GistListCommandBase(object):
             gist_names = [["> " + org] for org in self.orgs] + gist_names
 
         def on_gist_num(num):
+            """Handles gist when user selected it from the list"""
             off_orgs = len(self.orgs)
             off_users = off_orgs + len(self.users)
 
@@ -372,6 +376,7 @@ class GistListCommandBase(object):
 
 
 class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
+    """Shows list of gists to open it in the editor"""
     @catch_errors
     def handle_gist(self, gist):
         open_gist(gist['url'])
@@ -381,6 +386,7 @@ class GistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
 
 
 class GistListener(GistViewCommand, sublime_plugin.EventListener):
+    """Updates the gist during file save without showing filename dialog"""
     @catch_errors
     def on_pre_save(self, view):  # pylint: disable=no-self-use
         if view.settings().get('gist_filename') is not None:
@@ -399,6 +405,7 @@ class GistListener(GistViewCommand, sublime_plugin.EventListener):
 
 
 class InsertGistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
+    """Inserts gist contents into current tab"""
     @catch_errors
     def handle_gist(self, gist):
         insert_gist(gist['url'])
@@ -408,6 +415,7 @@ class InsertGistListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
 
 
 class InsertGistEmbedListCommand(GistListCommandBase, sublime_plugin.WindowCommand):
+    """Inserts <script> html tag with gist files into current tab"""
     @catch_errors
     def handle_gist(self, gist):
         insert_gist_embed(gist['url'])
@@ -417,7 +425,9 @@ class InsertGistEmbedListCommand(GistListCommandBase, sublime_plugin.WindowComma
 
 
 class GistAddFileCommand(GistListCommandBase, sublime_plugin.TextCommand):
+    """Adds file to existing gist"""
     def is_enabled(self):
+        # enable menu item only when file is not added to any gist yet (not a gistified view)
         return self.view.settings().get('gist_url') is None
 
     def handle_gist(self, gist):
