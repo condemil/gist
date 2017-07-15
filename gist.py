@@ -80,16 +80,13 @@ def create_gist(public, description, files):
 
 def update_gist(gist_url, file_changes, auth_token=None, https_proxy=None, new_description=None):
     request = {'files': file_changes}
-    # print('Request:', request)
     if new_description is not None:
         request['description'] = new_description
     data = json.dumps(request)
-    # print('Data:', data)
     result = api_request(gist_url, data, token=auth_token, https_proxy=https_proxy, method="PATCH")
 
     sublime.status_message("Gist updated")
 
-    # print('Result:', result)
     return result
 
 
@@ -213,8 +210,6 @@ class GistCommand(sublime_plugin.TextCommand):
 
                 if gistify:
                     helpers.gistify_view(self.view, gist, list(gist['files'].keys())[0])
-                    # else:
-                    # open_gist(gist['url'])
 
             window.show_input_panel('Gist File Name: (optional):', filename, on_gist_filename, None, None)
 
@@ -339,8 +334,6 @@ class GistListCommandBase(object):
 
             gist_names = [["> " + org] for org in self.orgs] + gist_names
 
-        # print(gist_names)
-
         def on_gist_num(num):
             off_orgs = len(self.orgs)
             off_users = off_orgs + len(self.users)
@@ -358,7 +351,6 @@ class GistListCommandBase(object):
                 filtered = helpers.gists_filter(self.gists)
                 self.gists = filtered[0]
                 gist_names = filtered[1]
-                # print(gist_names)
 
                 self.orgs = self.users = []
                 self.get_window().show_quick_panel(gist_names, on_gist_num)
@@ -367,7 +359,6 @@ class GistListCommandBase(object):
                     api_request(settings.get('USER_GISTS_URL') % self.users[num - off_orgs]))
                 self.gists = filtered[0]
                 gist_names = filtered[1]
-                # print(gist_names)
 
                 self.orgs = self.users = []
                 self.get_window().show_quick_panel(gist_names, on_gist_num)
