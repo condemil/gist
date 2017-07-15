@@ -1,35 +1,31 @@
 import json
 import re
 from os import path
+from unittest.mock import Mock
 
 settings_storage = {}
-_windows = []
+_windows = {}
 
 json_comments_regex = re.compile(r'^\s*//.*', re.MULTILINE)
 
 
-def status_message(message):
-    print(message)
-
-
-def error_message(message):
-    print(message)
+status_message = Mock()
+error_message = Mock()
+set_clipboard = Mock()
 
 
 def packages_path():
     return ''
 
 
-def set_clipboard(data):
-    pass
-
-
 def active_window():
-    return Window(0)
+    if 0 not in _windows:
+        _windows[0] = Window(0)
+    return _windows[0]
 
 
 def windows():
-    return [Window(window_id) for window_id in _windows]
+    return _windows.values()
 
 
 def load_settings(settings_filename):
@@ -68,6 +64,9 @@ class Region(object):
         self.b = b
         self.x_pos = x_pos
 
+    def empty(self):
+        return self.a == self.b
+
 
 class Settings:
     def __init__(self, settings):
@@ -80,15 +79,27 @@ class Settings:
     def set(self, key, value):
         self._settings[key] = value
 
+    def erase(self, key):
+        try:
+            del self._settings[key]
+        except KeyError:
+            pass
+
     def add_on_change(self, tag, callback):
         if tag == 'reload':
             self.reload_methods.append(callback)
 
 
+# noinspection PyMethodMayBeStatic,PyUnusedLocal
 class View:
     def __init__(self):
         self._settings = Settings({})
-        self._window = Window(0)
+        self._window = Mock()
+        self._file_name = None
+        self._status = {}
+        self._run_command = Mock()
+        self.selection = Mock()
+        self.selection.return_value = []
 
     def settings(self):
         return self._settings
@@ -100,19 +111,76 @@ class View:
         return 0
 
     def file_name(self):
-        return ''
+        return self._file_name
+
+    def set_name(self, name):
+        self._file_name = name
 
     def substr(self, x):
         return ''
 
+    def set_status(self, key, value):
+        self._status[key] = value
 
+    def erase_status(self, key):
+        try:
+            del self._status[key]
+        except KeyError:
+            pass
+
+    def run_command(self, cmd, args=None):
+        self._run_command(cmd, args=args)
+
+    def set_scratch(self, scratch):
+        """
+        Sets the scratch flag on the text buffer. When a modified scratch buffer
+        is closed, it will be closed without prompting to save.
+        """
+        return scratch
+
+    def retarget(self, new_fname):
+        pass
+
+    def sel(self):
+        return self.selection()
+
+
+# noinspection PyMethodMayBeStatic,PyUnusedLocal
 class Window:
     def __init__(self, window_id):
         self.window_id = window_id
+        self._view = View()
+
+    def open_file(self, fname, flags=0, group=-1):
+        """
+        valid bits for flags are:
+        ENCODED_POSITION: fname name may have :row:col or :row suffix
+        TRASIENT: don't add the file to the list of open buffers
+        FORCE_GROUP: don't select the file if it's opened in a different group
+        """
+        return View()
 
     def new_file(self):
-        pass
+        return View()
 
     def show_input_panel(self, caption, initial_text, on_done, on_change, on_cancel):
         """ on_done and on_change should accept a string argument, on_cancel should have no arguments """
         return View()
+
+    def show_quick_panel(self, items, on_select, flags=0, selected_index=-1, on_highlight=None):
+        """
+        on_select is called when the the quick panel is finished, and should
+        accept a single integer, specifying which item was selected, or -1 for none
+
+        on_highlight is called when the quick panel is still active, and
+        indicates the current highlighted index
+
+        flags is a bitwise OR of MONOSPACE_FONT, and KEEP_OPEN_ON_FOCUS_LOST
+        """
+        pass
+
+    def active_view(self):
+        return View()
+
+    def views(self):
+        return [self._view]
