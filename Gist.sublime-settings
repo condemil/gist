@@ -36,7 +36,7 @@
     "supress_save_dialog": true,
 
     // Update the Gist upon saving the file, suppressing the filename dialog.
-    "save-update-hook": true
+    "update_on_save": true
 
     // Limit to gists with specific prefix
     //"gist_prefix": "Snippet:",
