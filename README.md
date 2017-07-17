@@ -1,6 +1,9 @@
-# Gist [![Build Status](https://travis-ci.org/condemil/Gist.svg?branch=master)](https://travis-ci.org/condemil/Gist)
+# Gist
 
-A [Sublime Text 2/3](http://www.sublimetext.com/) plugin for creating and editing Gists.
+[![Build Status](https://travis-ci.org/condemil/Gist.svg?branch=master)](https://travis-ci.org/condemil/Gist)
+[![Coverage Status](https://coveralls.io/repos/github/condemil/Gist/badge.svg)](https://coveralls.io/github/condemil/Gist)
+
+A [Sublime Text 3](http://www.sublimetext.com/3) plugin for creating and editing Gists.
 
 
 # Installation
