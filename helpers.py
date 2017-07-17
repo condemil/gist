@@ -69,7 +69,7 @@ def gists_filter(all_gists):
             if name[0][0:prefix_len] == prefix:
                 name[0] = name[0][prefix_len:]  # remove prefix from name
             else:
-                continue
+                continue  # pragma: no cover (CPython's peephole optimizer replace it with jump to the top of the loop)
 
         if tag_prog:
             match = re.search(tag_prog, name[0])
@@ -77,7 +77,7 @@ def gists_filter(all_gists):
             if match:
                 name[0] = name[0][0:match.start()] + name[0][match.end():]
             else:
-                continue
+                continue  # pragma: no cover (CPython's peephole optimizer replace it with jump to the top of the loop)
 
         gists.append(gist)
         gists_names.append(name)
