@@ -9,15 +9,15 @@ except ImportError:
     from test.stubs import sublime
     from test.stubs import sublime_plugin
 
-git_url = 'https://git.io/create'
-caption = '[Enter a GitHub.com URL]  ' + b'\xe2\x96\x88'.decode('utf-8')
+gitio_url = 'https://git.io/create'
+caption = 'GitHub URL:'
 
 
 def git_io(req_url):
     data = urlencode({'url': req_url}).encode()
 
     try:
-        response = urlopen(git_url, data)
+        response = urlopen(gitio_url, data)
         body = response.read().decode()
         if response.status == 200:
             return None, 'https://git.io/{}'.format(body)
