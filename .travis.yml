@@ -1,13 +1,18 @@
 language: python
 
 python:
-  - "3.4"
+  - "3.3"
 
 install:
-  - pip install flake8
+  - pip install pylint coverage coveralls
 
 script:
-  - flake8 .
+  - pylint gist
+  #- coverage run -m unittest -v
+  - nosetests -v --with-coverage
+
+after_success:
+  - coveralls
 
 notifications:
   email: false

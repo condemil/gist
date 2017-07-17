@@ -21,12 +21,10 @@
     // Format: "http://user:pass@proxy:port"
     "https_proxy": "",
 
-    // Enterprise support
-    "enterprise": false,
-    // Github URL
-    // Default: Leave empty if you want to use GitHub.com
-    // Example: https://github.domain.com
-    "url": "",
+    // Github URL for public & enterprise
+    // Default: https://api.github.com for github.com
+    // Example: https://github.domain.com/api/v3
+    "api_url": "https://api.github.com",
 
     // Max Gists to show (max 100 allowed by GitHub API)
     "max_gists": 100,
@@ -38,7 +36,7 @@
     "supress_save_dialog": true,
 
     // Update the Gist upon saving the file, suppressing the filename dialog.
-    "save-update-hook": true
+    "update_on_save": true
 
     // Limit to gists with specific prefix
     //"gist_prefix": "Snippet:",

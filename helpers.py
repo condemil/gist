@@ -1,17 +1,10 @@
-# -*- coding: utf-8 -*-
-
 import os
-import sys
 import re
 
-PY3 = sys.version >= '3'
-#ST3 = sys.version >= '3'
-#ST3 = int(sublime.version()) >= 3000
-
-if PY3:
-    from .settings import *
-else:
-    from settings import *
+try:
+    import sublime
+except ImportError:
+    from test.stubs import sublime
 
 
 def gistify_view(view, gist, gist_filename):
@@ -38,6 +31,7 @@ def ungistify_view(view):
 
 
 def gist_title(gist):
+    settings = sublime.load_settings('Gist.sublime-settings')
     description = gist.get('description')
 
     if description and settings.get('prefer_filename') is False:
@@ -46,18 +40,19 @@ def gist_title(gist):
         title = list(gist['files'].keys())[0]
 
     if settings.get('show_authors'):
-        return [title, gist.get('user').get('login')]
-    else:
-        return [title]
+        return [title, gist.get('owner').get('login')]
+
+    return [title]
 
 
 def gists_filter(all_gists):
+    settings = sublime.load_settings('Gist.sublime-settings')
     prefix = settings.get('gist_prefix')
     if prefix:
         prefix_len = len(prefix)
 
     if settings.get('gist_tag'):
-        tag_prog = re.compile('(^|\s)#' + re.escape(settings.get('gist_tag')) + '($|\s)')
+        tag_prog = re.compile(r'(^|\s)#' + re.escape(settings.get('gist_tag')) + r'($|\s)')
     else:
         tag_prog = False
 
@@ -65,16 +60,16 @@ def gists_filter(all_gists):
     gists_names = []
 
     for gist in all_gists:
+        name = gist_title(gist)
+
         if not gist['files']:
             continue
 
-        name = gist_title(gist)
-
         if prefix:
             if name[0][0:prefix_len] == prefix:
-                name[0] = name[0][prefix_len:] # remove prefix from name
+                name[0] = name[0][prefix_len:]  # remove prefix from name
             else:
-                continue
+                continue  # pragma: no cover (CPython's peephole optimizer replace it with jump to the top of the loop)
 
         if tag_prog:
             match = re.search(tag_prog, name[0])
@@ -82,7 +77,7 @@ def gists_filter(all_gists):
             if match:
                 name[0] = name[0][0:match.start()] + name[0][match.end():]
             else:
-                continue
+                continue  # pragma: no cover (CPython's peephole optimizer replace it with jump to the top of the loop)
 
         gists.append(gist)
         gists_names.append(name)
@@ -91,7 +86,7 @@ def gists_filter(all_gists):
 
 
 def set_syntax(view, file_data):
-    if not "language" in file_data:
+    if "language" not in file_data:
         return
 
     language = file_data['language']
@@ -104,16 +99,9 @@ def set_syntax(view, file_data):
     else:
         new_syntax = os.path.join(language, "{0}.tmLanguage".format(language))
 
-    if PY3:
-        new_syntax_path = os.path.join('Packages', new_syntax)
+    new_syntax_path = os.path.join('Packages', new_syntax)
 
-        if os.name == 'nt':
-            new_syntax_path = new_syntax_path.replace('\\', '/')
-    else:
-        new_syntax_path = os.path.join(sublime.packages_path(), new_syntax)
+    if os.name == 'nt':
+        new_syntax_path = new_syntax_path.replace('\\', '/')
 
-    try:
-        #print(new_syntax_path)
-        view.set_syntax_file(new_syntax_path)
-    except:
-        pass
+    view.set_syntax_file(new_syntax_path)

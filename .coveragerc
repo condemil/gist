@@ -1,0 +1,10 @@
+[run]
+omit =
+    test/*
+    */python?.?/*
+
+[report]
+show_missing = true
+exclude_lines =
+    pragma: no cover
+    import

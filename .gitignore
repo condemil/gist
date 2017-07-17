@@ -4,9 +4,19 @@
 # Ignore cache files
 *.cache
 
-# Ignore Sublime Text 2 project files
+# Ignore Sublime Text files
 *.sublime-project
 *.sublime-workspace
 
 # Ignore Mac Desktop Services files
 .DS_Store
+
+# Ignore PyCharm's and IDEA's files
+.idea/
+*.iml
+
+# Ignore pyenv files
+.python-version
+
+# Ignore coverage files
+.coverage
