@@ -2,7 +2,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import gist
-import helpers
+import gist_helpers
 from test.stubs import sublime
 from test.stubs import github_api
 
@@ -59,22 +59,22 @@ class TestGistSettings(TestCase):
 
         # prefer_filename = False and with description - prefer description
         settings.set('prefer_filename', False)
-        result = helpers.gist_title(github_api.GIST_WITH_DESCRIPTION)
+        result = gist_helpers.gist_title(github_api.GIST_WITH_DESCRIPTION)
         self.assertEqual(result, ['some description'])
 
         # prefer_filename = True and with description - prefer one of file names
         settings.set('prefer_filename', True)
-        result = helpers.gist_title(github_api.GIST_WITH_DESCRIPTION)
+        result = gist_helpers.gist_title(github_api.GIST_WITH_DESCRIPTION)
         self.assertIn(result, (['some_file.txt'], ['another_file.cpp']))
 
         # prefer_filename = True and without description - prefer one of file names
         settings.set('prefer_filename', False)
-        result = helpers.gist_title(github_api.GIST_WITHOUT_DESCRIPTION)
+        result = gist_helpers.gist_title(github_api.GIST_WITHOUT_DESCRIPTION)
         self.assertIn(result, (['some_file.txt'], ['another_file.cpp']))
 
         # prefer_filename = False and without description - still prefer one of file names
         settings.set('prefer_filename', True)
-        result = helpers.gist_title(github_api.GIST_WITHOUT_DESCRIPTION)
+        result = gist_helpers.gist_title(github_api.GIST_WITHOUT_DESCRIPTION)
         self.assertIn(result, (['some_file.txt'], ['another_file.cpp']))
 
     def test_show_authors(self):
@@ -82,11 +82,11 @@ class TestGistSettings(TestCase):
         settings.set('prefer_filename', False)
 
         settings.set('show_authors', False)
-        result = helpers.gist_title(github_api.GIST_WITH_DESCRIPTION)
+        result = gist_helpers.gist_title(github_api.GIST_WITH_DESCRIPTION)
         self.assertEqual(result, ['some description'])
 
         settings.set('show_authors', True)
-        result = helpers.gist_title(github_api.GIST_WITH_DESCRIPTION)
+        result = gist_helpers.gist_title(github_api.GIST_WITH_DESCRIPTION)
         self.assertEqual(result, ['some description', 'some_user'])
 
 

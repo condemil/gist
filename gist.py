@@ -18,7 +18,12 @@ except ImportError:
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 from exceptions import MissingCredentialsException
-import helpers
+from gist_helpers import (
+    gistify_view,
+    gists_filter,
+    set_syntax,
+    ungistify_view,
+)
 from request import api_request
 
 settings = None
@@ -102,7 +107,7 @@ def open_gist(gist_url):
 
         view = sublime.active_window().new_file()
 
-        helpers.gistify_view(view, gist, gist_filename)
+        gistify_view(view, gist, gist_filename)
 
         view.run_command('append', {
             'characters': gist['files'][gist_filename]['content'],
@@ -118,7 +123,7 @@ def open_gist(gist_url):
             view.settings().set('do-update', False)
             view.run_command('save')
 
-        helpers.set_syntax(view, gist['files'][gist_filename])
+        set_syntax(view, gist['files'][gist_filename])
 
 
 def insert_gist(gist_url):
@@ -210,7 +215,7 @@ class GistCommand(sublime_plugin.TextCommand):
                 sublime.status_message("%s Gist: %s" % (self.mode(), gist_html_url))
 
                 if gistify:
-                    helpers.gistify_view(self.view, gist, list(gist['files'].keys())[0])
+                    gistify_view(self.view, gist, list(gist['files'].keys())[0])
 
             window.show_input_panel('Gist File Name: (optional):', filename, on_gist_filename, None, None)
 
@@ -255,7 +260,7 @@ class GistRenameFileCommand(GistViewCommand, sublime_plugin.TextCommand):
                 text = self.view.substr(sublime.Region(0, self.view.size()))
                 file_changes = {old_filename: {'filename': filename, 'content': text}}
                 new_gist = update_gist(self.gist_url(), file_changes)
-                helpers.gistify_view(self.view, new_gist, filename)
+                gistify_view(self.view, new_gist, filename)
                 sublime.status_message('Gist file renamed')
 
         self.view.window().show_input_panel('New File Name:', old_filename, on_filename, None, None)
@@ -271,7 +276,7 @@ class GistChangeDescriptionCommand(GistViewCommand, sublime_plugin.TextCommand):
                 for window in sublime.windows():
                     for view in window.views():
                         if view.settings().get('gist_url') == gist_url:
-                            helpers.gistify_view(view, new_gist, view.settings().get('gist_filename'))
+                            gistify_view(view, new_gist, view.settings().get('gist_filename'))
                 sublime.status_message('Gist description changed')
 
         self.view.window().show_input_panel('New Description:', self.gist_description() or '',
@@ -292,7 +297,7 @@ class GistDeleteFileCommand(GistViewCommand, sublime_plugin.TextCommand):
     def run(self, edit):
         changes = {self.gist_filename(): None}
         update_gist(self.gist_url(), changes)
-        helpers.ungistify_view(self.view)
+        ungistify_view(self.view)
         sublime.status_message("Gist file deleted")
 
 
@@ -304,7 +309,7 @@ class GistDeleteCommand(GistViewCommand, sublime_plugin.TextCommand):
         for window in sublime.windows():
             for view in window.views():
                 if view.settings().get("gist_url") == gist_url:
-                    helpers.ungistify_view(view)
+                    ungistify_view(view)
         sublime.status_message("Gist deleted")
 
 
@@ -319,8 +324,8 @@ class GistListCommandBase:
 
     @catch_errors
     def run(self, *args):  # TextCommand sends sublime.Edit object and WindowCommand is not
-        filtered = helpers.gists_filter(api_request(settings.get('GISTS_URL')))
-        filtered_stars = helpers.gists_filter(api_request(settings.get('STARRED_GISTS_URL')))
+        filtered = gists_filter(api_request(settings.get('GISTS_URL')))
+        filtered_stars = gists_filter(api_request(settings.get('STARRED_GISTS_URL')))
 
         self.gists = filtered[0] + filtered_stars[0]
         gist_names = filtered[1] + list(map(lambda x: [u"★ " + x[0]], filtered_stars[1]))
@@ -352,14 +357,14 @@ class GistListCommandBase:
                 for member in members:
                     self.gists += api_request(settings.get('USER_GISTS_URL') % member)
 
-                filtered = helpers.gists_filter(self.gists)
+                filtered = gists_filter(self.gists)
                 self.gists = filtered[0]
                 gist_names = filtered[1]
 
                 self.orgs = self.users = []
                 self.get_window().show_quick_panel(gist_names, on_gist_num)
             elif num < off_users:
-                filtered = helpers.gists_filter(
+                filtered = gists_filter(
                     api_request(settings.get('USER_GISTS_URL') % self.users[num - off_orgs]))
                 self.gists = filtered[0]
                 gist_names = filtered[1]
@@ -440,7 +445,7 @@ class GistAddFileCommand(GistListCommandBase, sublime_plugin.TextCommand):
                 text = self.view.substr(sublime.Region(0, self.view.size()))
                 changes = {filename: {'content': text}}
                 new_gist = update_gist(gist['url'], changes)
-                helpers.gistify_view(self.view, new_gist, filename)
+                gistify_view(self.view, new_gist, filename)
                 sublime.status_message("File added to Gist")
 
         filename = os.path.basename(self.view.file_name() if self.view.file_name() else '')

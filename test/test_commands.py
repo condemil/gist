@@ -163,7 +163,7 @@ class TestGistCommand(TestCase):
         mocked_insert_gist_embed.assert_called_with(TEST_GIST_URL)
         self.assertEqual(insert_gist_embed_list.get_window(), mocked_window)
 
-    @patch('helpers.gistify_view')
+    @patch('gist.gistify_view')
     @patch('gist.update_gist')
     def test_gist_add_file_command(self, mocked_update_gist, mocked_gistify_view):
         add_file = gist.GistAddFileCommand()
@@ -202,7 +202,7 @@ class TestGistCommand(TestCase):
         self.assertEqual(gist_view_command.gist_filename(), 'some gist filename')
         self.assertEqual(gist_view_command.gist_description(), 'some gist description')
 
-    @patch('helpers.gistify_view')
+    @patch('gist.gistify_view')
     @patch('test.stubs.sublime.Region')
     @patch('gist.create_gist')
     def test_gist_command(self, mocked_create_gist, mocked_region, mocked_gistify_view):
@@ -210,7 +210,7 @@ class TestGistCommand(TestCase):
         gist_command.view = sublime.View()
         window = gist_command.view._window
 
-        mocked_create_gist.return_value = {'html_url': 'some html url'}
+        mocked_create_gist.return_value = {'html_url': 'some html url', 'files': {'test.txt': None}}
 
         self.assertEqual(gist_command.mode(), 'Public')
 
@@ -232,7 +232,7 @@ class TestGistCommand(TestCase):
         mocked_create_gist.assert_called_with(True, 'some description', {'some filename': ''})
         sublime.set_clipboard.assert_called_with('some html url')
         sublime.status_message.assert_called_with('Public Gist: some html url')
-        self.assertEqual(mocked_gistify_view.call_count, 0)
+        self.assertEqual(mocked_gistify_view.call_count, 1)
 
         # TODO: test more than 2 regions selected
 
@@ -251,13 +251,13 @@ class TestGistCommand(TestCase):
         on_gist_filename(None)
 
         mocked_region.assert_called_with(0, 0)
-        self.assertEqual(mocked_gistify_view.call_count, 0)
+        self.assertEqual(mocked_gistify_view.call_count, 1)
 
     def test_gist_private_command(self):
         gist_private_command = gist.GistPrivateCommand()
         self.assertEqual(gist_private_command.mode(), 'Private')
 
-    @patch('helpers.gistify_view')
+    @patch('gist.gistify_view')
     @patch('gist.update_gist')
     def test_gist_rename_file_command(self, mocked_update_gist, mocked_gistify_view):
         gist_rename_file = gist.GistRenameFileCommand()
@@ -277,7 +277,7 @@ class TestGistCommand(TestCase):
         mocked_gistify_view.assert_called_with(gist_rename_file.view, 'some updated gist', 'some new filename')
         sublime.status_message.assert_called_with('Gist file renamed')
 
-    @patch('helpers.gistify_view')
+    @patch('gist.gistify_view')
     @patch('gist.update_gist')
     def test_change_description_command(self, mocked_update_gist, mocked_gistify_view):
         sublime._windows[0] = sublime.Window(0)
@@ -306,7 +306,7 @@ class TestGistCommand(TestCase):
 
         sublime.status_message.assert_called_with('Gist updated')
 
-    @patch('helpers.ungistify_view')
+    @patch('gist.ungistify_view')
     @patch('gist.update_gist')
     def test_gist_delete_file_command(self, mocked_update_gist, mocked_ungistify_view):
         gist_delete_file = gist.GistDeleteFileCommand()
@@ -317,7 +317,7 @@ class TestGistCommand(TestCase):
 
         sublime.status_message.assert_called_with('Gist file deleted')
 
-    @patch('helpers.ungistify_view')
+    @patch('gist.ungistify_view')
     @patch('gist.api_request')
     def test_gist_delete_command(self, mocked_api_request, mocked_ungistify_view):
         gist_delete = gist.GistDeleteCommand()

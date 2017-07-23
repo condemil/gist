@@ -4,7 +4,7 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 from urllib.error import HTTPError, URLError
 
-import helpers
+import gist_helpers
 import gist
 import git_io
 import request
@@ -104,8 +104,8 @@ class TestGist(TestCase):
                                               method=http_method)
         sublime.status_message.assert_called_with('Gist updated')
 
-    @patch('helpers.set_syntax')
-    @patch('helpers.gistify_view')
+    @patch('gist.set_syntax')
+    @patch('gist.gistify_view')
     @patch('test.stubs.sublime.Window.new_file')
     @patch('gist.api_request')
     def test_open_gist(self, mocked_api_request, mocked_new_file, mocked_gistify_view, mocked_set_syntax):
@@ -198,7 +198,7 @@ class TestGist(TestCase):
         mocked_copy.assert_called_with('Gist/Gist.sublime-settings', 'User/Gist.sublime-settings')
         mocked_open_file.assert_called_with('User/Gist.sublime-settings')
 
-    @patch('helpers.gist_title')
+    @patch('gist_helpers.gist_title')
     def test_gistify_view(self, mocked_gist_title):
         mocked_gist_title.return_value = ['some gist title']
         view = sublime.View()
@@ -209,7 +209,7 @@ class TestGist(TestCase):
             'url': 'some url'
         }
 
-        helpers.gistify_view(view, gist, gist_filename)
+        gist_helpers.gistify_view(view, gist, gist_filename)
 
         self.assertEqual(view.file_name(), 'some filename')
         self.assertEqual(view.settings().get('gist_html_url'), 'some html url')
@@ -222,7 +222,7 @@ class TestGist(TestCase):
         gist_filename = 'some another filename'
         view.set_name('some view filename')
 
-        helpers.gistify_view(view, gist, gist_filename)
+        gist_helpers.gistify_view(view, gist, gist_filename)
 
         self.assertEqual(view._status.get('Gist'), 'Gist: some gist title (some another filename)')
 
@@ -235,7 +235,7 @@ class TestGist(TestCase):
         view.settings().set('gist_filename', 'some filename')
         view.set_status('Gist', 'some status')
 
-        helpers.ungistify_view(view)
+        gist_helpers.ungistify_view(view)
 
         self.assertIsNone(view.settings().get('gist_html_url'))
         self.assertIsNone(view.settings().get('gist_description'))
@@ -254,7 +254,7 @@ class TestGist(TestCase):
             {'description': 'some_prefix:some gist 3 #some_tag', 'files': {'some_test2.sh': {}}},
         ]
 
-        gists, gists_names = helpers.gists_filter(all_gists)
+        gists, gists_names = gist_helpers.gists_filter(all_gists)
 
         self.assertEqual(gists, [{'files': {'some_test2.sh': {}}, 'description': 'some_prefix:some gist 3 #some_tag'}])
         self.assertEqual(gists_names, [['some gist 3']])
@@ -263,16 +263,16 @@ class TestGist(TestCase):
     def test_set_syntax(self):
         view = Mock()
 
-        helpers.set_syntax(view, {})
+        gist_helpers.set_syntax(view, {})
         self.assertEqual(view.set_syntax_file.call_count, 0)
 
-        helpers.set_syntax(view, {'language': None})
+        gist_helpers.set_syntax(view, {'language': None})
         self.assertEqual(view.set_syntax_file.call_count, 0)
 
-        helpers.set_syntax(view, {'language': 'C'})
+        gist_helpers.set_syntax(view, {'language': 'C'})
         view.set_syntax_file.assert_called_with('Packages/C++/C.tmLanguage')
 
-        helpers.set_syntax(view, {'language': 'Something'})
+        gist_helpers.set_syntax(view, {'language': 'Something'})
         view.set_syntax_file.assert_called_with('Packages/Something/Something.tmLanguage')
 
     def test_token_auth_string(self):
