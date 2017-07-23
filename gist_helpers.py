@@ -45,7 +45,7 @@ def gist_title(gist):
     return [title]
 
 
-def gists_filter(all_gists):
+def gists_filter(all_gists, name_prefix=''):
     settings = sublime.load_settings('Gist.sublime-settings')
     prefix = settings.get('gist_prefix')
     if prefix:
@@ -78,6 +78,8 @@ def gists_filter(all_gists):
                 name[0] = name[0][0:match.start()] + name[0][match.end():]
             else:
                 continue  # pragma: no cover (CPython's peephole optimizer replace it with jump to the top of the loop)
+
+        name[0] = name_prefix + name[0]  # add name_prefix to name
 
         gists.append(gist)
         gists_names.append(name)

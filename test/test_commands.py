@@ -1,11 +1,10 @@
 from threading import Lock
-from unittest import TestCase, skip
+from unittest import TestCase
 from unittest.mock import Mock, patch
 
 import gist
 import git_io
-from test.stubs import github_api
-from test.stubs import sublime
+from test.stubs import github_api, sublime
 
 DEFAULT_GISTS_URL = 'https://api.github.com/gists?per_page=100'
 DEFAULT_STARRED_GISTS_URL = 'https://api.github.com/gists/starred?per_page=100'
@@ -53,7 +52,7 @@ class TestGistCommand(TestCase):
     @patch('gist.api_request')
     def test_gist_list_command_base(self, mocked_api_request):
         gist.plugin_loaded()
-        mocked_api_request.side_effect = [github_api.GIST_LIST, github_api.GIST_STARRED_LIST]
+        mocked_api_request.side_effect = [github_api.GIST_STARRED_LIST, github_api.GIST_LIST]
         gist.settings.set('include_users', ['some user'])
         gist.settings.set('include_orgs', ['some org'])
         gist_list_base = gist.GistListCommandBase()
@@ -63,15 +62,15 @@ class TestGistCommand(TestCase):
             mocked_get_window.return_value = mocked_window
             gist_list_base.run()
             self.assertEqual(mocked_api_request.call_count, 2)
-            self.assertEqual(mocked_api_request.mock_calls[0][1], (DEFAULT_GISTS_URL,))
-            self.assertEqual(mocked_api_request.mock_calls[1][1], (DEFAULT_STARRED_GISTS_URL,))
+            self.assertEqual(mocked_api_request.mock_calls[0][1], (DEFAULT_STARRED_GISTS_URL,))
+            self.assertEqual(mocked_api_request.mock_calls[1][1], (DEFAULT_GISTS_URL,))
             self.assertEqual(mocked_window.show_quick_panel.call_args[0][0],
                              [['> some org'], ['> some user'], ['some shell gist'], ['some python gist'],
                               ['★ some starred gist']])
 
             # test include_orgs is True
             mocked_api_request.reset_mock()
-            mocked_api_request.side_effect = [github_api.GIST_LIST, github_api.GIST_STARRED_LIST,
+            mocked_api_request.side_effect = [github_api.GIST_STARRED_LIST, github_api.GIST_LIST,
                                               [{'login': 'some org login'}]]
             gist.settings.set('include_orgs', True)
             gist_list_base.run()
@@ -80,7 +79,7 @@ class TestGistCommand(TestCase):
 
             # test run() accepts one argument
             mocked_api_request.reset_mock()
-            mocked_api_request.side_effect = [github_api.GIST_LIST, github_api.GIST_STARRED_LIST]
+            mocked_api_request.side_effect = [github_api.GIST_STARRED_LIST, github_api.GIST_LIST]
             gist.settings.set('include_users', [])
             gist.settings.set('include_orgs', [])
             gist_list_base = gist.GistListCommandBase()
@@ -137,7 +136,6 @@ class TestGistCommand(TestCase):
 
         self.assertRaises(NotImplementedError, gist_list_base.handle_gist, None)
         self.assertRaises(NotImplementedError, gist_list_base.get_window)
-
 
     @patch('gist.open_gist')
     def test_gist_list_command(self, mocked_open_gist):

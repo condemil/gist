@@ -324,11 +324,16 @@ class GistListCommandBase:
 
     @catch_errors
     def run(self, *args):  # TextCommand sends sublime.Edit object and WindowCommand is not
-        filtered = gists_filter(api_request(settings.get('GISTS_URL')))
-        filtered_stars = gists_filter(api_request(settings.get('STARRED_GISTS_URL')))
+        filtered_gists, filtered_gist_names = gists_filter(api_request(settings.get('STARRED_GISTS_URL')), '★ ')
 
-        self.gists = filtered[0] + filtered_stars[0]
-        gist_names = filtered[1] + list(map(lambda x: [u"★ " + x[0]], filtered_stars[1]))
+        if not settings.get('use_starred'):
+            # add not starred gists
+            filtered_not_stared = gists_filter(api_request(settings.get('GISTS_URL')))
+            filtered_gists = filtered_not_stared[0] + filtered_gists
+            filtered_gist_names = filtered_not_stared[1] + filtered_gist_names
+
+        self.gists = filtered_gists
+        gist_names = filtered_gist_names
 
         if settings.get('include_users'):
             self.users = list(settings.get('include_users'))
