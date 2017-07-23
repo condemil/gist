@@ -7,7 +7,7 @@ from urllib.error import HTTPError, URLError
 import gist_helpers
 import gist
 import git_io
-import request
+import gist_request
 from exceptions import MissingCredentialsException, SimpleHTTPError
 from test.stubs import sublime
 from test.stubs import github_api
@@ -276,14 +276,14 @@ class TestGist(TestCase):
         view.set_syntax_file.assert_called_with('Packages/Something/Something.tmLanguage')
 
     def test_token_auth_string(self):
-        self.assertRaises(MissingCredentialsException, request.token_auth_string)
+        self.assertRaises(MissingCredentialsException, gist_request.token_auth_string)
 
         gist.plugin_loaded()
         sublime.settings_storage['Gist.sublime-settings'].set('token', 'some token')
 
-        self.assertEqual(request.token_auth_string(), 'some token')
+        self.assertEqual(gist_request.token_auth_string(), 'some token')
 
-    @patch('request.urllib')
+    @patch('gist_request.urllib')
     def test_api_request(self, mocked_urllib):
         url = 'https://url.test'
         data = 'some data'
@@ -293,7 +293,7 @@ class TestGist(TestCase):
 
         mocked_urllib.urlopen().read.return_value = b'{"some": "response"}'
 
-        result = request.api_request(url, data, token, https_proxy, method)
+        result = gist_request.api_request(url, data, token, https_proxy, method)
 
         mocked_urllib.Request.assert_called_with(url)
 
@@ -317,7 +317,7 @@ class TestGist(TestCase):
         # no content flow, do nothing
         mocked_urllib.urlopen().code = 204
 
-        result = request.api_request(url, data, token, https_proxy, method)
+        result = gist_request.api_request(url, data, token, https_proxy, method)
 
         self.assertIsNone(result)
 
@@ -326,4 +326,4 @@ class TestGist(TestCase):
         mocked_urllib.urlopen.side_effect = HTTPError(url, 'some code', 'some msg', 'some headers',
                                                       StringIO('some error data'))
 
-        self.assertRaises(SimpleHTTPError, request.api_request, url, data, token)
+        self.assertRaises(SimpleHTTPError, gist_request.api_request, url, data, token)

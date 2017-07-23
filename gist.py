@@ -24,7 +24,7 @@ from gist_helpers import (
     set_syntax,
     ungistify_view,
 )
-from request import api_request
+from gist_request import api_request
 
 settings = None
 
