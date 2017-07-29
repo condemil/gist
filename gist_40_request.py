@@ -8,7 +8,7 @@ except ImportError:
 
 import urllib.request as urllib
 
-from exceptions import MissingCredentialsException, SimpleHTTPError
+from gist_20_exceptions import MissingCredentialsException, SimpleHTTPError
 
 
 def token_auth_string():

@@ -4,16 +4,16 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 from urllib.error import HTTPError
 
-import gist_helpers
-import gist
-import gist_request
-from exceptions import MissingCredentialsException, SimpleHTTPError
+import gist_40_request as gist_request
+import gist_60_helpers as gist_helpers
+import gist_80 as gist
+from gist_20_exceptions import MissingCredentialsException, SimpleHTTPError
 from test.stubs import sublime
 from test.stubs import github_api
 
 
 class TestGist(TestCase):
-    @patch('gist.api_request')
+    @patch('gist_80.api_request')
     def test_create_gist(self, mocked_api_request):
         gist.plugin_loaded()
         description = 'some description'
@@ -45,7 +45,7 @@ class TestGist(TestCase):
         gist.create_gist(public, description, failed_files)
         sublime.error_message.assert_called_with('Gist: Unable to create a Gist with empty content')
 
-    @patch('gist.api_request')
+    @patch('gist_80.api_request')
     def test_update_gist(self, mocked_api_request):
         gist_url = 'some gist url'
         file_changes = 'some file changes'
@@ -64,10 +64,10 @@ class TestGist(TestCase):
                                               method=http_method)
         sublime.status_message.assert_called_with('Gist updated')
 
-    @patch('gist.set_syntax')
-    @patch('gist.gistify_view')
+    @patch('gist_80.set_syntax')
+    @patch('gist_80.gistify_view')
     @patch('test.stubs.sublime.Window.new_file')
-    @patch('gist.api_request')
+    @patch('gist_80.api_request')
     def test_open_gist(self, mocked_api_request, mocked_new_file, mocked_gistify_view, mocked_set_syntax):
         gist_url = 'some gist url'
         mocked_api_request.return_value = github_api.GIST_WITH_FILE_CONTENT_AND_TYPE
@@ -105,7 +105,7 @@ class TestGist(TestCase):
                          github_api.GIST_WITH_FILE_CONTENT_AND_TYPE['files']['some_file1.txt'])
 
     @patch('test.stubs.sublime.Window.active_view')
-    @patch('gist.api_request')
+    @patch('gist_80.api_request')
     def test_insert_gist(self, mocked_api_request, mocked_active_view):
         gist_url = 'some gist url'
         mocked_api_request.return_value = github_api.GIST_WITH_FILE_CONTENT_AND_TYPE
@@ -127,7 +127,7 @@ class TestGist(TestCase):
         self.assertEqual(view.settings.return_value.set.call_count, 6)
 
     @patch('test.stubs.sublime.Window.active_view')
-    @patch('gist.api_request')
+    @patch('gist_80.api_request')
     def test_insert_gist_embed(self, mocked_api_request, mocked_active_view):
         gist_url = 'some gist url'
         mocked_api_request.return_value = github_api.GIST_WITH_RAW_URL
@@ -144,8 +144,8 @@ class TestGist(TestCase):
                          {'characters': '<script src="some another raw url"></script>'})
 
     @patch('test.stubs.sublime.Window.open_file')
-    @patch('gist.shutil.copy')
-    @patch('gist.traceback.print_exc')
+    @patch('gist_80.shutil.copy')
+    @patch('gist_80.traceback.print_exc')
     def test_catch_errors(self, mocked_print_exc, mocked_copy, mocked_open_file):
         gist.catch_errors(lambda: exec('raise(Exception())'))()
         self.assertEqual(mocked_print_exc.call_count, 1)
@@ -158,7 +158,7 @@ class TestGist(TestCase):
         mocked_copy.assert_called_with('Gist/Gist.sublime-settings', 'User/Gist.sublime-settings')
         mocked_open_file.assert_called_with('User/Gist.sublime-settings')
 
-    @patch('gist_helpers.gist_title')
+    @patch('gist_60_helpers.gist_title')
     def test_gistify_view(self, mocked_gist_title):
         mocked_gist_title.return_value = ['some gist title']
         view = sublime.View()
@@ -219,7 +219,7 @@ class TestGist(TestCase):
         self.assertEqual(gists, [{'files': {'some_test2.sh': {}}, 'description': 'some_prefix:some gist 3 #some_tag'}])
         self.assertEqual(gists_names, [['some gist 3']])
 
-    @patch('gist.os.name', 'nt')
+    @patch('gist_80.os.name', 'nt')
     def test_set_syntax(self):
         view = Mock()
 
@@ -243,7 +243,7 @@ class TestGist(TestCase):
 
         self.assertEqual(gist_request.token_auth_string(), 'some token')
 
-    @patch('gist_request.urllib')
+    @patch('gist_40_request.urllib')
     def test_api_request(self, mocked_urllib):
         url = 'https://url.test'
         data = 'some data'

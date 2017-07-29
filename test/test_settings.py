@@ -1,8 +1,8 @@
 from unittest import TestCase
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-import gist
-import gist_helpers
+import gist_60_helpers as gist_helpers
+import gist_80 as gist
 from test.stubs import github_api, sublime
 
 DEFAULT_GISTS_URL = 'https://api.github.com/gists?per_page=100'
@@ -41,7 +41,7 @@ class TestGistSettings(TestCase):
         self.assertEqual(gist.settings.get('STARRED_GISTS_URL'), CUSTOM_STARRED_GISTS_URL)
         self.assertEqual(gist.settings.get('ORGS_URL'), CUSTOM_ORGS_URL)
 
-    @patch('gist.sublime.status_message')
+    @patch('gist_80.sublime.status_message')
     def test_max_gists(self, patched_status_message):
         gist.settings.set('max_gists', 101)
         gist.set_settings()
@@ -88,8 +88,8 @@ class TestGistSettings(TestCase):
         result = gist_helpers.gist_title(github_api.GIST_WITH_DESCRIPTION)
         self.assertEqual(result, ['some description', 'some_user'])
 
-    @patch('gist.GistListCommandBase.get_window')
-    @patch('gist.api_request')
+    @patch('gist_80.GistListCommandBase.get_window')
+    @patch('gist_80.api_request')
     def test_use_starred(self, mocked_api_request, mocked_get_window):
         gist.plugin_loaded()
         mocked_api_request.side_effect = [github_api.GIST_STARRED_LIST, github_api.GIST_LIST]
