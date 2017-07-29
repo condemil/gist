@@ -17,7 +17,7 @@ gitio_url = 'https://git.io/create'
 caption = 'GitHub URL:'
 
 
-def git_io(req_url):
+def gitio(req_url):
     data = urlencode({'url': req_url}).encode()
 
     try:
@@ -33,12 +33,12 @@ def git_io(req_url):
         return 'Gist: Error contacting git.io', None
 
 
-class GistGitioCommand(sublime_plugin.TextCommand):
+class GitioCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         self.view.window().show_input_panel(caption, '', self.on_done, None, None)
 
     def on_done(self, req_url):
-        err, short_url = git_io(req_url)
+        err, short_url = gitio(req_url)
         if err:
             sublime.error_message(err)
             self.view.window().show_input_panel(caption, req_url, self.on_done, None, None)

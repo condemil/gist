@@ -2,57 +2,17 @@ import json
 from io import StringIO
 from unittest import TestCase
 from unittest.mock import Mock, patch
-from urllib.error import HTTPError, URLError
+from urllib.error import HTTPError
 
 import gist_helpers
 import gist
-import git_io
 import gist_request
 from exceptions import MissingCredentialsException, SimpleHTTPError
 from test.stubs import sublime
 from test.stubs import github_api
 
 
-GITIO_TEST_URL = 'https://some_url.test/'
-GITIO_TEST_DATA = b'url=https%3A%2F%2Fsome_url.test%2F'
-
-
 class TestGist(TestCase):
-    def test_git_io(self):
-        response = Mock()
-        response.status = 200
-        response.read.return_value = b'some_data'
-        with patch('git_io.urlopen', return_value=response) as mocked_urlopen:
-            result = git_io.git_io(GITIO_TEST_URL)
-            mocked_urlopen.assert_called_with(git_io.gitio_url, GITIO_TEST_DATA)
-            self.assertEqual(result, (None, 'https://git.io/some_data'))
-
-    def test_git_io_error_status_response(self):
-        error_status_response = Mock()
-        error_status_response.status = 500
-        error_status_response.read.return_value = b'some_error'
-        with patch('git_io.urlopen', return_value=error_status_response) as mocked_urlopen:
-            result = git_io.git_io(GITIO_TEST_URL)
-            mocked_urlopen.assert_called_with(git_io.gitio_url, GITIO_TEST_DATA)
-            self.assertEqual(result, ('some_error', None))
-
-    def test_git_io_http_error_response(self):
-        with patch('git_io.urlopen') as mocked_urlopen:
-            http_error_response = Mock()
-            http_error_response.read.return_value = b'some_http_error'
-            mocked_urlopen.side_effect = HTTPError(None, None, None, None, http_error_response)
-            result = git_io.git_io(GITIO_TEST_URL)
-            mocked_urlopen.assert_called_with(git_io.gitio_url, GITIO_TEST_DATA)
-            self.assertEqual(result, ('some_http_error', None))
-
-    def test_git_io_url_error_response(self):
-        with patch('git_io.urlopen') as mocked_urlopen:
-            url_error_response = Mock()
-            mocked_urlopen.side_effect = URLError(None, url_error_response)
-            result = git_io.git_io(GITIO_TEST_URL)
-            mocked_urlopen.assert_called_with(git_io.gitio_url, GITIO_TEST_DATA)
-            self.assertEqual(result, ('Gist: Error contacting git.io', None))
-
     @patch('gist.api_request')
     def test_create_gist(self, mocked_api_request):
         gist.plugin_loaded()

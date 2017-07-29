@@ -3,15 +3,12 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 
 import gist
-import git_io
 from test.stubs import github_api, sublime
 
 DEFAULT_GISTS_URL = 'https://api.github.com/gists?per_page=100'
 DEFAULT_STARRED_GISTS_URL = 'https://api.github.com/gists/starred?per_page=100'
 DEFAULT_ORGS_URL = 'https://api.github.com/user/orgs'
 
-TEST_GITHUB_URL = 'https://github.test/some/url'
-TEST_GITIO_SHORT_URL = 'https://git.io.test/some/short/url'
 TEST_GIST_URL = 'https://api.github.test/gists/45681ac0a18a46b487620c6836e1510c'
 
 TEST_ORG_MEMBERS_URL = 'https://api.github.com/orgs/0/members'
@@ -30,24 +27,6 @@ class TestGistCommand(TestCase):
         gist_open_browser = gist.GistOpenBrowser()
         gist_open_browser.run(edit=None)
         patch_gist_webbrowser.open.assert_called_with(None)
-
-    def test_gist_gitio(self):
-        gist_gitio = git_io.GistGitioCommand()
-        gist_gitio.run(edit=None)
-        gist_gitio.view.window().show_input_panel.assert_called_with('GitHub URL:', '', gist_gitio.on_done, None, None)
-
-        with patch('git_io.git_io', return_value=(None, TEST_GITIO_SHORT_URL)) as mocked_git_io:
-            gist_gitio.on_done(TEST_GITHUB_URL)
-            mocked_git_io.assert_called_with(TEST_GITHUB_URL)
-            sublime.set_clipboard.assert_called_with(TEST_GITIO_SHORT_URL)
-            sublime.status_message.assert_called_with('Gist: Copied to Clipboard! ' + TEST_GITIO_SHORT_URL)
-
-        with patch('git_io.git_io', return_value=('Some error', None)) as mocked_git_io:
-            gist_gitio.on_done(TEST_GITHUB_URL)
-            mocked_git_io.assert_called_with(TEST_GITHUB_URL)
-            sublime.error_message.assert_called_with('Some error')
-            gist_gitio.view.window().show_input_panel.assert_called_with(
-                'GitHub URL:', TEST_GITHUB_URL, gist_gitio.on_done, None, None)
 
     @patch('gist.api_request')
     def test_gist_list_command_base(self, mocked_api_request):
