@@ -1,5 +1,3 @@
-import sys
-from os import path
 from urllib.error import URLError, HTTPError
 from urllib.parse import urlencode
 from urllib.request import urlopen
@@ -10,8 +8,6 @@ try:
 except ImportError:
     from test.stubs import sublime
     from test.stubs import sublime_plugin
-
-sys.path.append(path.dirname(path.realpath(__file__)))
 
 gitio_url = 'https://git.io/create'
 caption = 'GitHub URL:'

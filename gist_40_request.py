@@ -1,12 +1,11 @@
 import contextlib
 import json
+import urllib.request as urllib
 
 try:
     import sublime
 except ImportError:
     from test.stubs import sublime
-
-import urllib.request as urllib
 
 from gist_20_exceptions import MissingCredentialsException, SimpleHTTPError
 

@@ -2,7 +2,6 @@ import functools
 import json
 import os
 import shutil
-import sys
 import tempfile
 import threading
 import traceback
@@ -14,8 +13,6 @@ try:
 except ImportError:
     from test.stubs import sublime
     from test.stubs import sublime_plugin
-
-sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 from gist_20_exceptions import MissingCredentialsException
 from gist_60_helpers import (

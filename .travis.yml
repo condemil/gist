@@ -7,7 +7,7 @@ install:
   - pip install pylint coverage coveralls
 
 script:
-  - pylint gist_20_exceptions gist_40_request gist_60_helpers gist_80 gitio
+  - pylint gist_05_import gist_20_exceptions gist_40_request gist_60_helpers gist_80 gitio
   #- coverage run -m unittest -v
   - nosetests -v --with-coverage
 
