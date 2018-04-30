@@ -1,5 +1,6 @@
 import os
 import re
+import tempfile
 
 try:
     import sublime
@@ -86,12 +87,22 @@ def gists_filter(all_gists, name_prefix=''):
 
     return [gists, gists_names]
 
+def get_language_from_file(filename):
+    open(tempfile.gettempdir() + "/__" + filename, "a").close()
+    window = sublime.active_window()
+    file = window.open_file("/tmp/__" + filename)
+    syntax = file.settings().get("syntax")
+    file.close()
+    return syntax
 
 def set_syntax(view, file_data):
     if "language" not in file_data:
         return
 
     language = file_data['language']
+    if language is None and 'filename' in file_data:
+        syntax = get_language_from_file(file_data['filename'])
+        view.set_syntax_file(syntax)
 
     if language is None:
         return
