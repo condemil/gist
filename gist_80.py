@@ -72,7 +72,7 @@ def create_gist(public, description, files):
     for _, text in list(files.items()):
         if not text:
             sublime.error_message("Gist: Unable to create a Gist with empty content")
-            return
+            return None
 
     file_data = dict((filename, {'content': text}) for filename, text in list(files.items()))
     data = json.dumps({'description': description, 'public': public, 'files': file_data})
