@@ -114,7 +114,7 @@ def open_gist(gist_url):
             view.set_scratch(True)
 
         if settings.get('update_on_save'):
-            view.retarget(os.path.join(tempfile.gettempdir(), gist_filename))
+            view.retarget(os.path.join(tempfile.gettempdir(), "{}-{}".format(gist['id'], gist_filename)))
             # Save over it (to stop us reloading from that file in case it exists)
             # But don't actually do a gist update
             view.settings().set('do-update', False)
