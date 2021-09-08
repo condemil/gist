@@ -1,4 +1,5 @@
 GIST_LIST = [{
+    'id': 'gist1',
     'owner': {'login': 'some_user'},
     'description': 'some shell gist',
     'files': {
@@ -6,6 +7,7 @@ GIST_LIST = [{
     }
 },
 {
+    'id': 'gist2',
     'owner': {'login': 'some_user'},
     'description': 'some python gist',
     'files': {
@@ -15,6 +17,7 @@ GIST_LIST = [{
 }]
 
 GIST_STARRED_LIST = [{
+    'id': 'gist3',
     'description': 'some starred gist',
     'owner': {'login': 'some_user'},
     'files': {
@@ -23,6 +26,7 @@ GIST_STARRED_LIST = [{
 }]
 
 GIST_WITHOUT_DESCRIPTION = {
+    'id': 'gist4',
     'owner': {'login': 'some_user'},
     'files': {
         'some_file.txt': {},
@@ -31,6 +35,7 @@ GIST_WITHOUT_DESCRIPTION = {
 }
 
 GIST_WITH_DESCRIPTION = {
+    'id': 'gist5',
     'owner': {'login': 'some_user'},
     'description': 'some description',
     'files': {
@@ -40,6 +45,7 @@ GIST_WITH_DESCRIPTION = {
 }
 
 GIST_WITH_FILE_CONTENT_AND_TYPE = {
+    'id': 'gist6',
     'html_url': 'some html url',
     'description': 'some description',
     'url': 'some url',
@@ -51,6 +57,7 @@ GIST_WITH_FILE_CONTENT_AND_TYPE = {
 }
 
 GIST_WITH_RAW_URL = {
+    'id': 'gist7',
     'files': {
         'some_file1.txt': {'raw_url': 'some raw url', 'content': 'some content'},
         'some_file2.txt': {'raw_url': 'some another raw url', 'content': 'another content'}
