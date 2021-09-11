@@ -1,6 +1,6 @@
 # Gist
 
-[![Build Status](https://travis-ci.org/condemil/Gist.svg?branch=master)](https://travis-ci.org/condemil/Gist)
+![Build Status](https://github.com/condemil/Gist/actions/workflows/ci/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/condemil/Gist/badge.svg)](https://coveralls.io/github/condemil/Gist)
 [![Package Control](https://img.shields.io/packagecontrol/dt/Gist.svg)](https://packagecontrol.io/packages/Gist)
 
@@ -45,7 +45,7 @@ Where USERNAME is your Github username. Save the token generated and paste it in
 If OTP is enabled on your account, this will return 401 error code, use:
 
     curl -v -u USERNAME -H "X-GitHub-OTP: OTPCODE" -X POST https://api.github.com/authorizations --data "{\"scopes\":[\"gist\"], \"note\": \"SublimeText 2/3 Gist plugin\"}"
-    
+
 Where OTPCODE is the code your authenticator app shows you.
 
 
