@@ -26,7 +26,7 @@ def api_request(url, data=None, token=None, https_proxy=None, method=None):
 
     if method:
         request.get_method = lambda: method
-    token = token if token != None else token_auth_string()
+    token = token if token is not None else token_auth_string()
     request.add_header('Authorization', 'token ' + token)
     request.add_header('Accept', 'application/json')
     request.add_header('Content-Type', 'application/json')
@@ -34,10 +34,15 @@ def api_request(url, data=None, token=None, https_proxy=None, method=None):
     if data is not None:
         request.add_data(bytes(data.encode('utf8')))
 
-    https_proxy = https_proxy if https_proxy != None else settings.get('https_proxy')
+    https_proxy = (
+        https_proxy if https_proxy is not None else settings.get('https_proxy')
+    )
     if https_proxy:
-        opener = urllib.build_opener(urllib.HTTPHandler(), urllib.HTTPSHandler(),
-                                     urllib.ProxyHandler({'https': https_proxy}))
+        opener = urllib.build_opener(
+            urllib.HTTPHandler(),
+            urllib.HTTPSHandler(),
+            urllib.ProxyHandler({'https': https_proxy}),
+        )
 
         urllib.install_opener(opener)
 
@@ -48,6 +53,6 @@ def api_request(url, data=None, token=None, https_proxy=None, method=None):
 
             return json.loads(response.read().decode('utf8', 'ignore'))
 
-    except urllib.HTTPError as err:
-        with contextlib.closing(err):
-            raise SimpleHTTPError('{}: {}'.format(err.code, err.read()))
+    except urllib.HTTPError as e:
+        with contextlib.closing(e):
+            raise SimpleHTTPError('{}: {}'.format(e.code, e.read())) from e
