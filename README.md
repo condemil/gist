@@ -1,8 +1,8 @@
 # Gist
 
-![Build Status](https://github.com/condemil/Gist/actions/workflows/ci/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/condemil/Gist/badge.svg)](https://coveralls.io/github/condemil/Gist)
-[![Package Control](https://img.shields.io/packagecontrol/dt/Gist.svg)](https://packagecontrol.io/packages/Gist)
+[![Build Status](https://github.com/condemil/Gist/actions/workflows/ci/badge.svg)](https://github.com/condemil/gist/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/condemil/Gist/badge.svg)](https://coveralls.io/github/condemil/gist)
+[![Package Control](https://img.shields.io/packagecontrol/dt/Gist.svg)](https://packagecontrol.io/packages/gist)
 
 
 A [Sublime Text 3](http://www.sublimetext.com/3) plugin for creating and editing Gists.
