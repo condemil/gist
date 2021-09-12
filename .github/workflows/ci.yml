@@ -37,8 +37,8 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3
-      - run: pip install -q coverage coveralls nose
-      - run: nosetests -v --with-coverage
-      - uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - run: pip install -q coveralls pytest-cov
+      - run: pytest --cov
+      - run: coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
