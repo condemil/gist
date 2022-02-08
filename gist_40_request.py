@@ -56,5 +56,7 @@ def api_request(url, data=None, token=None, https_proxy=None, method=None):
             return json.loads(response.read().decode('utf8', 'ignore'))
 
     except urllib.HTTPError as e:
+        sublime.error_message("Gist api_request Exception:\n  Method: {};\n  URL: {};\n  Headers: {};\n  Exception: {}".format(str(method), str(url), str(request.headers), str(e)))
+
         with contextlib.closing(e):
-            raise SimpleHTTPError('{}: {}'.format(e.code, e.read())) from e
+            raise e
