@@ -30,6 +30,8 @@ def api_request(url, data=None, token=None, https_proxy=None, method=None):
     request.add_header('Authorization', 'token ' + token)
     request.add_header('Accept', 'application/json')
     request.add_header('Content-Type', 'application/json')
+    # Get around rate-limit features: http://docs2.lfe.io/v3/#conditional-requests
+    request.add_header('If-Modified-Since', 'Thu, 05 Jul 2010 15:31:30 GMT')
 
     if data is not None:
         request.add_data(bytes(data.encode('utf8')))
