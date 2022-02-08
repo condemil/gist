@@ -5,5 +5,7 @@
 	{ "keys": ["ctrl+k", "ctrl+o"], "command": "gist_list" },
 	{ "keys": ["ctrl+k", "ctrl+["], "command": "insert_gist_list" },
 	{ "keys": ["ctrl+k", "ctrl+]"], "command": "gist_add_file" },
-	{ "keys": ["ctrl+k", "ctrl+g"], "command": "gist_gitio" }
+	{ "keys": ["ctrl+k", "ctrl+g"], "command": "gist_gitio" },
+	{ "keys": ["ctrl+k", "ctrl+k"], "command": "gist_copy_url" },
+	{ "keys": ["ctrl+k", "ctrl+b"], "command": "gist_open_browser" }
 ]
