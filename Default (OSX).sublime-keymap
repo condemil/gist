@@ -5,5 +5,7 @@
 	{ "keys": ["super+k", "super+o"], "command": "gist_list" },
 	{ "keys": ["super+k", "super+["], "command": "insert_gist_list" },
 	{ "keys": ["super+k", "super+]"], "command": "gist_add_file" },
-	{ "keys": ["super+k", "super+g"], "command": "gist_gitio" }
+	{ "keys": ["super+k", "super+g"], "command": "gist_gitio" },
+	{ "keys": ["super+k", "super+k"], "command": "gist_copy_url" },
+	{ "keys": ["super+k", "super+b"], "command": "gist_open_browser" }
 ]

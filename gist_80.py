@@ -70,9 +70,9 @@ def catch_errors(fn):
                 shutil.copy(default_settings_path, user_settings_path)
             sublime.active_window().open_file(user_settings_path)
             return None
-        except:
+        except Exception as e:
             traceback.print_exc()
-            sublime.error_message("Gist: unknown error (please, report a bug!)")
+            sublime.error_message("Gist: unknown error (please, report a bug!)\n  " + str(e))
             return None
 
     return _fn

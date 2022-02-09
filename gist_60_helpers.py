@@ -7,8 +7,14 @@ except ImportError:
     from test.stubs import sublime
 
 
+def prefix_status_line(text, gist, gist_filename):
+    prefix = "Gist"
+    if 'cached' in gist:
+        prefix = prefix + " (cached)"
+    return "%s: %s (%s)" % (prefix, text, gist_filename)
+
 def gistify_view(view, gist, gist_filename):
-    statusline_string = "Gist: " + gist_title(gist)[0]
+    statusline_string = gist_title(gist)[0]
 
     if not view.file_name():
         view.set_name(gist_filename)
@@ -19,7 +25,7 @@ def gistify_view(view, gist, gist_filename):
     view.settings().set('gist_description', gist['description'])
     view.settings().set('gist_url', gist["url"])
     view.settings().set('gist_filename', gist_filename)
-    view.set_status("Gist", statusline_string)
+    view.set_status("Gist", prefix_status_line(statusline_string, gist, gist_filename))
 
 
 def ungistify_view(view):
